@@ -14,15 +14,15 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',  // changed from autoUpdate — lets UpdatePrompt control when to reload
       devOptions: { enabled: true },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Race Tracker',
-        short_name: 'RaceTracker',
+        name: 'RunScope',
+        short_name: 'RunScope',
         description: 'Share your race progress with friends and family',
-        theme_color: '#1a1a2e',
-        background_color: '#1a1a2e',
+        theme_color: '#0f172a',
+        background_color: '#0f172a',
         display: 'standalone',
         start_url: '/',
         icons: [
@@ -33,18 +33,18 @@ export default defineConfig({
       workbox: {
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
-            {
+          {
             urlPattern: /^https:\/\/api\.mapbox\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
-                cacheName: 'mapbox-cache',
-                expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7 },
+              cacheName: 'mapbox-cache',
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7 },
             },
-            },
-            {
+          },
+          {
             urlPattern: /^https:\/\/runscope\.stablesea\.net\/api\/.*/i,
             handler: 'NetworkOnly',
-            },
+          },
         ],
       },
     }),

@@ -1,17 +1,12 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { registerSW } from 'virtual:pwa-register'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import { UpdatePrompt } from './shared/components/UpdatePrompt'
 import './index.css'
-import App from './App.tsx'
 
-registerSW({
-  onNeedRefresh() {},
-  onOfflineReady() {},
-  immediate: true,
-})
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
     <App />
-  </StrictMode>,
+    <UpdatePrompt />
+  </React.StrictMode>
 )
