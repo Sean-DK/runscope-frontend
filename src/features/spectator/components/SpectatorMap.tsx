@@ -6,6 +6,7 @@ import { RacerMarker } from './RacerMarker'
 import { ConnectionStatusBar } from './ConnectionStatusBar'
 import { Route } from '../../routes/types'
 import 'mapbox-gl/dist/mapbox-gl.css'
+import { getOrderedRouteCoordinates } from '../../routes/utils/routeGeometry'
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string
 
@@ -60,7 +61,7 @@ export const SpectatorMap = () => {
 
   const route = event?.route
 
-  const allCoords = route?.segments.flatMap((s) => s.path as [number, number][]) ?? []
+  const allCoords = route ? getOrderedRouteCoordinates(route) : []
 
   const { traversed, remaining } = racerPosition
     ? splitRouteAtPosition(allCoords, racerPosition)

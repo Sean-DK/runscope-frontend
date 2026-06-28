@@ -3,6 +3,7 @@ import Map, { Layer, MapMouseEvent, MapRef, Source } from 'react-map-gl/mapbox'
 import { useRouteBuilder } from '../hooks/useRouteBuilder'
 import { WaypointMarker } from './WaypointMarker'
 import 'mapbox-gl/dist/mapbox-gl.css'
+import { getOrderedRouteCoordinates } from '../utils/routeGeometry'
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string
 
@@ -45,7 +46,7 @@ export const RouteBuilderMap = () => {
     type: 'Feature',
     geometry: {
       type: 'LineString',
-      coordinates: draftRoute?.segments.flatMap((seg) => seg.path) ?? [],
+      coordinates: draftRoute ? getOrderedRouteCoordinates(draftRoute) : [],
     },
     properties: {},
   }

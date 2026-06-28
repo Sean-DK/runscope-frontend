@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react'
 import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import { useSpectatorStore } from '../store/spectatorStore'
 import { EventLocation, RaceEvent } from '../../events/types'
+import { getOrderedRouteCoordinates } from '../../routes/utils/routeGeometry'
 
 const IS_DEV = import.meta.env.DEV
 const SIGNALR_HUB_URL = import.meta.env.VITE_SIGNALR_HUB_URL as string | undefined
@@ -25,7 +26,7 @@ export const useSpectatorSignalR = (eventId: string | null) => {
     store.setConnectionStatus('Connected')
 
     // Simulate the racer moving along the route segments
-    const allCoords = event.route.segments.flatMap((s) => s.path)
+    const allCoords = getOrderedRouteCoordinates(event.route)
     if (allCoords.length === 0) return
 
     let index = 0

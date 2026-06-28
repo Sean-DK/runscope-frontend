@@ -6,6 +6,7 @@ import { Route } from '../types'
 import { useUnits } from '../../../shared/hooks/useUnits'
 import { C, F } from '../../../shared/ds'
 import 'mapbox-gl/dist/mapbox-gl.css'
+import { getOrderedRouteCoordinates } from '../utils/routeGeometry'
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string
 
@@ -42,9 +43,14 @@ export const RouteDetail = ({ route, onDelete, onShare, isDeleting }: Props) => 
   const mapRef   = useRef<MapRef>(null)
   const { useMetric } = useUnits()
 
+  const coords = getOrderedRouteCoordinates(route)
+    console.log('waypoints:', route.waypoints)
+    console.log('segments:', route.segments)
+    console.log('coords:', coords)
+
   const geoJson: Feature<LineString> = {
     type: 'Feature',
-    geometry: { type: 'LineString', coordinates: route.segments.flatMap((s) => s.path) },
+    geometry: { type: 'LineString', coordinates: getOrderedRouteCoordinates(route) },
     properties: {},
   }
 

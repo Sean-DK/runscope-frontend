@@ -4,7 +4,7 @@ import { Route } from './types'
 interface UpsertRoutePayload {
   name: string
   totalDistance: number
-  waypoints: { order: number; coordinates: [number, number] }[]
+  waypoints: { clientId: string; order: number; coordinates: [number, number] }[]
   segments: {
     fromWaypointId: string
     toWaypointId: string
@@ -17,6 +17,7 @@ const toPayload = (route: Omit<Route, 'id' | 'createdAt' | 'updatedAt'>): Upsert
   name: route.name,
   totalDistance: route.totalDistance,
   waypoints: route.waypoints.map((w) => ({
+    clientId: w.id,  // send client-side ID so backend can map segments
     order: w.order,
     coordinates: w.coordinates,
   })),

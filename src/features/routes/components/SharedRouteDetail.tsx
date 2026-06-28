@@ -5,6 +5,7 @@ import { Feature, LineString } from 'geojson'
 import { Route } from '../types'
 import { routesApi } from '../api'
 import 'mapbox-gl/dist/mapbox-gl.css'
+import { getOrderedRouteCoordinates } from '../utils/routeGeometry'
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string
 
@@ -40,7 +41,7 @@ export const SharedRouteDetail = ({ route, isSignedIn }: SharedRouteDetailProps)
     type: 'Feature',
     geometry: {
       type: 'LineString',
-      coordinates: route.segments.flatMap((seg) => seg.path),
+      coordinates: getOrderedRouteCoordinates(route),
     },
     properties: {},
   }
