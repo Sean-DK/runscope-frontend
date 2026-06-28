@@ -22,6 +22,9 @@ const mapOverlayBtn: React.CSSProperties = {
   justifyContent:  'center',
 }
 
+const fmtDist = (m: number, metric: boolean) =>
+  metric ? `${(m / 1000).toFixed(1)} km` : `${(m / 1609.344).toFixed(1)} mi`
+
 export const RouteBuilderPage = () => {
   const [searchParams] = useSearchParams()
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -98,8 +101,7 @@ export const RouteBuilderPage = () => {
             gap:           6,
             cursor:        'pointer',
           }} onClick={() => setSidebarOpen(true)}>
-            {store.draftRoute?.name || 'New route'}
-            <span style={{ width: 2, height: 16, background: C.volt, borderRadius: 1, animation: 'rsBlink 1s infinite' }} />
+            {store.draftRoute ? fmtDist(store.draftRoute.totalDistance, useMetric) : '--' }
           </div>
         </div>
       )}
