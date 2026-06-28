@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { eventsApi } from '../api'
 import { RaceEvent } from '../types'
 import { C, F, screenPad, btnVolt } from '../../../shared/ds'
+import { useUnits } from '../../../shared/hooks/useUnits'
 
 const fmtTime = (startedAt: string, finishedAt: string): string => {
   const s = Math.floor((new Date(finishedAt).getTime() - new Date(startedAt).getTime()) / 1000)
@@ -22,6 +21,9 @@ const fmtPace = (startedAt: string, finishedAt: string, totalMeters: number): st
   return `${m}:${String(sec).padStart(2, '0')} /km`
 }
 
+const fmtDist = (m: number, metric: boolean) =>
+  metric ? `${(m / 1000).toFixed(1)} km` : `${(m / 1609.344).toFixed(1)} mi`
+
 const monthKey = (iso: string) =>
   new Date(iso).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 
@@ -40,16 +42,13 @@ const groupByMonth = (events: RaceEvent[]): Group[] => {
   return Array.from(map.entries()).map(([month, evts]) => ({ month, events: evts }))
 }
 
-export const PastEventList = () => {
-  const navigate = useNavigate()
-  const [events, setEvents] = useState<RaceEvent[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+interface PastEventListProps {
+  events: RaceEvent[]
+  isLoading: boolean
+}
 
-  useEffect(() => {
-    eventsApi.getPast()
-      .then(setEvents)
-      .finally(() => setIsLoading(false))
-  }, [])
+export const PastEventList = ({ events, isLoading}: PastEventListProps) => {
+  const navigate = useNavigate()
 
   if (isLoading) {
     return (
@@ -94,11 +93,12 @@ export const PastEventList = () => {
 }
 
 const EventRow = ({ event, isLast, onClick }: { event: RaceEvent; isLast: boolean; onClick: () => void }) => {
+  const { useMetric } = useUnits()
   const hasTime = !!(event.startedAt && event.finishedAt)
   const time    = hasTime ? fmtTime(event.startedAt!, event.finishedAt!) : null
   const pace    = hasTime ? fmtPace(event.startedAt!, event.finishedAt!, event.route.totalDistance) : null
   const dateStr = new Date(event.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  const distKm  = event.route.totalDistance ? `${(event.route.totalDistance / 1000).toFixed(1)} km` : null
+  const dist  = event.route.totalDistance ? event.route.totalDistance : null
 
   return (
     <div
@@ -128,7 +128,7 @@ const EventRow = ({ event, isLast, onClick }: { event: RaceEvent; isLast: boolea
           )}
         </div>
         <span style={{ fontFamily: F.ui, fontSize: 12, color: C.textSecondary }}>
-          {dateStr}{distKm ? ` · ${distKm}` : ''}
+          {dateStr}{dist ? ` · ${fmtDist(dist, useMetric)}` : ''}
         </span>
       </div>
 
