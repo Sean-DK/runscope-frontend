@@ -1,6 +1,7 @@
 import { useSpectatorStore } from '../store/spectatorStore'
 import { C, F, screenPad } from '../../../shared/ds'
 import { CANCEL_REASONS } from '../../events/types'
+import { useState } from 'react'
 
 const MILE = 1609.344
 const KM   = 1000
@@ -40,21 +41,27 @@ interface SpectatorStatsProps {
 
 export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
   const { event, stats, connectionStatus } = useSpectatorStore()
+  const [drawerOpen, setDrawerOpen] = useState(false)
   if (!event) return null
 
-  const totalDist  = event.route.totalDistance ?? 0
-  const remaining  = stats.distanceRemainingMeters ?? totalDist
-  const covered    = Math.max(0, totalDist - remaining)
-  const distCovered = fmtDist(covered, useMetric)
-  const avgPace     = fmtPace(stats.averagePaceSecondsPerMile, useMetric)
-  const elapsed     = fmtElapsed(stats.elapsedSeconds)
-  const eta         = fmtETA(stats.estimatedFinishTimestamp)
+  const totalDist     = event.route.totalDistance ?? 0
+  const remaining     = stats.distanceRemainingMeters ?? totalDist
+  const covered       = Math.max(0, totalDist - remaining)
+  const distCovered   = fmtDist(covered, useMetric)
+  const distRemaining = fmtDist(remaining, useMetric)
+  const distTotal     = fmtDist(totalDist, useMetric)
+  const avgPace       = fmtPace(stats.averagePaceSecondsPerMile, useMetric)
+  const currPace      = fmtPace(stats.currentPaceSecondsPerMile, useMetric)
+  const elapsed       = fmtElapsed(stats.elapsedSeconds)
+  const estFinish     = fmtElapsed(stats.estimatedFinishSeconds)
+  const eta           = fmtETA(stats.estimatedFinishTimestamp)
+  const pct           = totalDist > 0 ? Math.min(1, covered / totalDist) : 0
 
   const statCells = [
-    { label: 'Distance', value: distCovered },
-    { label: 'Avg pace', value: avgPace },
+    { label: 'Average pace', value: avgPace },
     { label: 'Elapsed',  value: elapsed },
-    { label: 'Est. finish', value: eta, highlight: true },
+    { label: 'Current pace', value: currPace },
+    { label: 'Est. finish', value: estFinish, highlight: true },
   ]
 
   return (
@@ -64,44 +71,109 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
       flexDirection:   'column',
       height:          '100%',
     }}>
-      {/* Cancelled notice */}
-      {event.status === 'Cancelled' && (
-        <div style={{
-          margin:  `12px ${screenPad}px 0`,
-          padding: '12px 16px',
-          background:    'rgba(255,82,71,.1)',
-          border:        `1px solid rgba(255,82,71,.25)`,
-          borderRadius:  12,
-        }}>
-          <p style={{ fontFamily: F.ui, fontSize: 13, color: C.red, margin: 0 }}>
-            {event.cancelReason
-              ? `Event cancelled — ${CANCEL_REASONS.find(r => r.value === event.cancelReason)?.label ?? event.cancelReason}`
-              : 'Event cancelled'}
-          </p>
-        </div>
-      )}
-
-      {/* 2×2 stat grid */}
+      {/* Bottom sheet */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap:     10,
-        padding: `16px ${screenPad}px`,
+        position:       'absolute',
+        bottom:         0,
+        left:           0,
+        right:          0,
+        zIndex:         20,
+        background:     'rgba(10,11,13,0.88)',
+        backdropFilter: 'blur(18px)',
+        borderRadius:   '20px 20px 0 0',
+        border:         `1px solid ${C.hairline}`,
+        borderBottom:   'none',
       }}>
-        {statCells.map(({ label, value, highlight }) => (
-          <StatCard key={label} label={label} value={value} highlight={!!highlight} />
-        ))}
-      </div>
+        {/* Drag handle + always-visible summary — tap to toggle */}
+        <div
+          onClick={() => setDrawerOpen((o) => !o)}
+          style={{ padding: '12px 20px 0px', cursor: 'pointer' }}
+        >
+          {/* Handle pill */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)' }} />
+          </div>
 
-      {/* Footer */}
-      <div style={{ padding: `0 ${screenPad}px 16px`, textAlign: 'center' }}>
-        <p style={{ fontFamily: F.ui, fontSize: 11, color: C.textTertiary, margin: 0 }}>
-          {connectionStatus === 'Connected'
-            ? 'Auto-refresh · updates in real time'
-            : connectionStatus === 'Reconnecting'
-            ? 'Reconnecting...'
-            : 'Connection lost'}
-        </p>
+          {/* Cancelled notice */}
+          {event.status === 'Cancelled' && (
+              <div style={{
+              margin:  `12px ${screenPad}px 0`,
+              padding: '12px 16px',
+              background:    'rgba(255,82,71,.1)',
+              border:        `1px solid rgba(255,82,71,.25)`,
+              borderRadius:  12,
+              }}>
+              <p style={{ fontFamily: F.ui, fontSize: 13, color: C.red, margin: 0 }}>
+                  {event.cancelReason
+                  ? `Event cancelled — ${CANCEL_REASONS.find(r => r.value === event.cancelReason)?.label ?? event.cancelReason}`
+                  : 'Event cancelled'}
+              </p>
+              </div>
+          )}
+
+          {/* Progress card */}
+          {totalDist > 0 && (
+            <div style={{
+              margin:        '0px 16px 0px 16px',
+              padding:       '0px 16px',
+              zIndex:        10,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+                <span style={{ fontFamily: F.ui, fontSize: 13, fontWeight: 700, color: C.textPrimary }}>
+                  Distance to finish
+                </span>
+                <span style={{ fontFamily: F.display, fontSize: 13, fontWeight: 600, color: C.volt }}>
+                  ETA {eta}
+                </span>
+              </div>
+              <div style={{ marginBottom: 8 }}>
+                  <span style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.textPrimary }}>
+                      {distRemaining}
+                  </span>
+              </div>
+              <div style={{ height: 8, borderRadius: 4, background: C.elevated, overflow: 'hidden', marginBottom: 4 }}>
+                <div style={{ height: '100%', width: `${pct * 100}%`, background: C.volt, borderRadius: 4, transition: 'width .5s ease' }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+                <span style={{ fontFamily: F.ui, fontSize: 11, color: C.textTertiary }}>
+                  {distCovered} done
+                </span>
+                <span style={{ fontFamily: F.ui, fontSize: 11, color: C.textTertiary }}>
+                  {distTotal} total
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Collapsible stat cards */}
+          <div style={{
+            maxHeight:  drawerOpen ? '400px' : '0px',
+            overflow:   'hidden',
+            transition: 'max-height 0.35s cubic-bezier(.4,0,.2,1)',
+          }}>
+           <div style={{
+             display: 'grid',
+             gridTemplateColumns: '1fr 1fr',
+             gap:     10,
+             padding: `16px ${screenPad}px`,
+           }}>
+             {statCells.map(({ label, value, highlight }) => (
+               <StatCard key={label} label={label} value={value} highlight={!!highlight} />
+             ))}
+           </div>
+          </div>
+
+          {/* Footer */}
+          <div style={{ padding: `0 ${screenPad}px 8px`, textAlign: 'center' }}>
+            <p style={{ fontFamily: F.ui, fontSize: 11, color: C.textTertiary, margin: 0 }}>
+              {connectionStatus === 'Connected'
+                ? 'Auto-refresh · updates in real time'
+                : connectionStatus === 'Reconnecting'
+                ? 'Reconnecting...'
+                : 'Connection lost'}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )

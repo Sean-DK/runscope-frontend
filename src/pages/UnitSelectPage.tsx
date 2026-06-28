@@ -1,4 +1,5 @@
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { C, screenPad } from '../shared/ds'
 
 export const UnitSelectPage = () => {
   const navigate = useNavigate()
@@ -15,14 +16,12 @@ export const UnitSelectPage = () => {
   return (
     <div style={{
       minHeight: '100dvh',
-      backgroundColor: '#0f172a',
-      color: '#e2e8f0',
+      backgroundColor: C.base,
       display: 'flex',
       flexDirection: 'column',
+      padding: `0 ${screenPad}px`,
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '24px 16px',
-      boxSizing: 'border-box',
     }}>
       <div style={{
         width: '100%',
@@ -37,7 +36,7 @@ export const UnitSelectPage = () => {
           <h1 style={{ margin: '0 0 8px', fontSize: 24, fontWeight: 800 }}>
             Before you watch...
           </h1>
-          <p style={{ margin: 0, fontSize: 14, color: '#64748b' }}>
+          <p style={{ margin: 0, fontSize: 14, color: C.textTertiary }}>
             Which units would you like to use?
           </p>
         </div>
@@ -47,19 +46,11 @@ export const UnitSelectPage = () => {
           <button
             onClick={() => handleSelect('miles')}
             style={optionButtonStyle}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#3b82f6'
-              e.currentTarget.style.backgroundColor = '#1e3a5f'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = '#1e293b'
-              e.currentTarget.style.backgroundColor = '#1e1e2e'
-            }}
           >
             <span style={{ fontSize: 28 }}>🇺🇸</span>
             <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: 16, fontWeight: 700 }}>Miles</div>
-              <div style={{ fontSize: 13, color: '#64748b' }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: C.textPrimary }}>Miles</div>
+              <div style={{ fontSize: 13, color: C.textTertiary }}>
                 min/mi, miles remaining
               </div>
             </div>
@@ -68,19 +59,11 @@ export const UnitSelectPage = () => {
           <button
             onClick={() => handleSelect('kilometers')}
             style={optionButtonStyle}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#3b82f6'
-              e.currentTarget.style.backgroundColor = '#1e3a5f'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = '#1e293b'
-              e.currentTarget.style.backgroundColor = '#1e1e2e'
-            }}
           >
-            <span style={{ fontSize: 28 }}>🌍</span>
+            <span style={{ fontSize: 28 }}><GlobeIcon /></span>
             <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: 16, fontWeight: 700 }}>Kilometers</div>
-              <div style={{ fontSize: 13, color: '#64748b' }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: C.textPrimary }}>Kilometers</div>
+              <div style={{ fontSize: 13, color: C.textTertiary }}>
                 min/km, kilometers remaining
               </div>
             </div>
@@ -92,16 +75,24 @@ export const UnitSelectPage = () => {
 }
 
 const optionButtonStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 16,
-  padding: '16px',
-  borderRadius: 12,
-  border: '1px solid #1e293b',
-  backgroundColor: '#1e1e2e',
-  color: '#e2e8f0',
-  cursor: 'pointer',
-  textAlign: 'left',
-  width: '100%',
-  transition: 'border-color 0.15s ease, background-color 0.15s ease',
+  display:      'flex',
+  alignItems:   'center',
+  gap:          16,
+  padding:      16,
+  borderRadius: 16,
+  border:       `1px solid ${C.hairline}`,
+  background:   C.surface,
+  color:        C.textPrimary,
+  cursor:       'pointer',
+  textAlign:    'left',
+  width:        '100%',
 }
+
+const GlobeIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21.54 15H17a2 2 0 0 0-2 2v4.54"/>
+    <path d="M7 3.34V5a3 3 0 0 0 3 3a2 2 0 0 1 2 2c0 1.1.9 2 2 2a2 2 0 0 0 2-2c0-1.1.9-2 2-2h3.17"/>
+    <path d="M11 21.95V18a2 2 0 0 0-2-2a2 2 0 0 1-2-2v-1a2 2 0 0 0-2-2H2.05"/>
+    <circle cx="12" cy="12" r="10"/>
+  </svg>
+)
