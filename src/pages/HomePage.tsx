@@ -241,6 +241,7 @@ const LivePill = () => (
   <span style={{
     display:       'inline-flex',
     alignItems:    'center',
+    alignSelf:     'flex-start',
     gap:           6,
     padding:       '5px 11px',
     borderRadius:  100,
@@ -255,7 +256,7 @@ const LivePill = () => (
       width: 6, height: 6, borderRadius: '50%', background: C.volt,
       animation: 'rsBlink 1.2s infinite',
     }} />
-    LIVE
+    LIVE RACE TRACKING
   </span>
 )
 

@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../features/auth/hooks/useAuth'
+import { C, F, screenPad } from '../shared/ds'
+import { RunScopeLogo } from '../shared/components/AppHeader'
 
 export const SignInPage = () => {
   const navigate = useNavigate()
@@ -20,14 +22,12 @@ export const SignInPage = () => {
   return (
     <div style={{
       minHeight: '100dvh',
-      backgroundColor: '#0f172a',
-      color: '#e2e8f0',
+      backgroundColor: C.base,
       display: 'flex',
       flexDirection: 'column',
+      padding: `0 ${screenPad}px`,
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '24px 16px',
-      boxSizing: 'border-box',
     }}>
       <div style={{
         width: '100%',
@@ -37,28 +37,37 @@ export const SignInPage = () => {
         alignItems: 'center',
         gap: 24,
       }}>
-
         {/* Logo / app name */}
         <div style={{ textAlign: 'center' }}>
-          <h1 style={{ margin: '0 0 6px', fontSize: 32, fontWeight: 800, letterSpacing: '-0.02em' }}>
+          <div
+            onClick={() => navigate('/')}
+            style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+          >
+            <RunScopeLogo />
+            <span style={{ fontFamily: F.display, fontWeight: 700, fontSize: 36, letterSpacing: '-.02em', color: C.textPrimary }}>
             RunScope
-          </h1>
-          <p style={{ margin: 0, fontSize: 14, color: '#64748b' }}>
-            Share your race with the people who matter
+            </span>
+          </div>
+          <p style={{ fontFamily: F.ui, fontSize: 15, color: C.textSecondary, margin: 0, lineHeight: 1.55 }}>
+            Share every mile, the moment it happens.
           </p>
         </div>
 
         {/* Sign in card */}
         <div style={{
-          width: '100%',
-          backgroundColor: '#1e1e2e',
-          borderRadius: 12,
-          border: '1px solid #1e293b',
-          padding: '24px',
-          display: 'flex',
+          display:      'flex',
           flexDirection: 'column',
-          gap: 16,
-          boxSizing: 'border-box',
+          alignItems:   'center',
+          justifyContent: 'space-between',
+          gap:          16,
+          padding:      22,
+          borderRadius: 22,
+          border:       `1px solid ${C.hairline}`,
+          background:   C.surface,
+          color:        C.textPrimary,
+          cursor:       'pointer',
+          textAlign:    'left',
+          width:        '100%',
         }}>
           <div style={{ textAlign: 'center' }}>
             <h2 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 700 }}>
@@ -79,16 +88,14 @@ export const SignInPage = () => {
               width: '100%',
               padding: '12px 16px',
               borderRadius: 8,
-              border: '1px solid #334155',
-              backgroundColor: '#ffffff',
-              color: '#1e293b',
+              border: 'none',
+              backgroundColor: C.volt,
+              color: C.base,
               fontWeight: 600,
               fontSize: 15,
               cursor: 'pointer',
               transition: 'background-color 0.15s ease',
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
           >
             <GoogleIcon />
             Sign in with Google
@@ -97,23 +104,15 @@ export const SignInPage = () => {
 
         {/* Spectator bypass */}
         <div style={{ textAlign: 'center' }}>
-          <p style={{ margin: '0 0 8px', fontSize: 13, color: '#64748b' }}>
+          <p style={{ textAlign: 'center', fontFamily: F.ui, fontSize: 13, color: C.textTertiary, margin: '0' }}>
             Here to watch a race?
           </p>
-          <button
+          <span
             onClick={() => navigate('/join')}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#3b82f6',
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            }}
+            style={{ color: C.volt, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}
           >
             Join as a spectator — no sign in needed
-          </button>
+          </span>
         </div>
       </div>
     </div>
