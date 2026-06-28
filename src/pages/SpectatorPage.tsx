@@ -12,7 +12,7 @@ export const SpectatorPage = () => {
   const { id } = useParams<{ id: string }>()
   const [searchParams] = useSearchParams()
   const navigate  = useNavigate()
-  const { event, error, setEvent, setError, clearSpectator, connectionStatus } = useSpectatorStore()
+  const { event, error, setEvent, setError, clearSpectator, connectionStatus, applyLocationUpdate, setConnectionStatus } = useSpectatorStore()
   const { useMetric } = useUnits()
 
   useSpectatorSignalR(event ? id ?? null : null)
@@ -22,7 +22,44 @@ export const SpectatorPage = () => {
     if (!searchParams.get('units')) { navigate(`/events/${id}/units`); return }
     spectatorApi.getEventById(id)
       .then((e) => { if (e.status === 'Ended') { setError('This event has ended.'); return }; setEvent(e) })
-      .catch(() => setError('Event not found. The code may be invalid or expired.'))
+      .catch(() => {
+        if (import.meta.env.DEV) {
+          setConnectionStatus('Connected')
+          setEvent({
+            id: 'dev-event',
+            eventCode: '74K291',
+            routeId: 'dev-route',
+            route: {
+              id: 'dev-route',
+              name: 'Morning Half Marathon',
+              waypoints: [
+                { id: 'wp1', coordinates: [-0.1276, 51.5074], order: 0 },
+                { id: 'wp2', coordinates: [-0.1200, 51.5200], order: 1 },
+                { id: 'wp3', coordinates: [-0.1050, 51.5250], order: 2 },
+              ],
+              segments: [],
+              totalDistance: 21100,
+              createdAt: new Date(Date.now() - 4200000).toISOString(),
+              updatedAt: new Date(Date.now() - 4200000).toISOString(),
+            },
+            status: 'Active',
+            createdAt: new Date(Date.now() - 4200000).toISOString(),
+            startedAt: new Date(Date.now() - 4200000).toISOString(),
+            finishedAt: null,
+            endedAt: null,
+            lastLocation: null,
+          })
+          applyLocationUpdate({
+            coordinates: [-0.1180, 51.5160],
+            timestamp: new Date().toISOString(),
+            distanceFromStart: 7400,
+            currentPaceSecondsPerMile: 342,
+            averagePaceSecondsPerMile: 339,
+          })
+        } else {
+          setError('Event not found. The code may be invalid or expired.')
+        }
+      })
     return () => clearSpectator()
   }, [id])
 

@@ -11,7 +11,7 @@ const fmtPace = (spm: number | null, metric: boolean): string => {
   const spu = metric ? spm / (MILE / KM) : spm
   const m   = Math.floor(spu / 60)
   const s   = Math.round(spu % 60)
-  return `${m}:${String(s).padStart(2, '0')}${metric ? ' /km' : ' /mi'}`
+  return `${m}:${String(s).padStart(2, '0')}${metric ? '/km' : '/mi'}`
 }
 
 const fmtElapsed = (seconds: number | null): string => {
@@ -53,7 +53,7 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
   const avgPace       = fmtPace(stats.averagePaceSecondsPerMile, useMetric)
   const currPace      = fmtPace(stats.currentPaceSecondsPerMile, useMetric)
   const elapsed       = fmtElapsed(stats.elapsedSeconds)
-  const estFinish     = fmtElapsed(stats.estimatedFinishSeconds)
+  const estFinish     = fmtElapsed((stats.elapsedSeconds ?? 0) + (stats.estimatedFinishSeconds ?? 0))
   const eta           = fmtETA(stats.estimatedFinishTimestamp)
   const pct           = totalDist > 0 ? Math.min(1, covered / totalDist) : 0
 
