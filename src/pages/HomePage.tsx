@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../features/auth/hooks/useAuth'
+import { AppHeader } from '../shared/components/AppHeader'
 
 const isIos = () =>
   /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase())
@@ -9,7 +10,7 @@ const isInStandaloneMode = () =>
 
 export const HomePage = () => {
   const navigate = useNavigate()
-  const { isSignedIn, user, signOut } = useAuth()
+  const { isSignedIn, user } = useAuth()
 
   const showIosInstallHint = isIos() && !isInStandaloneMode()
 
@@ -20,51 +21,39 @@ export const HomePage = () => {
       color: '#e2e8f0',
       display: 'flex',
       flexDirection: 'column',
-      padding: '0 16px',
       boxSizing: 'border-box',
     }}>
 
-      {/* Header */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingTop: 24,
-        paddingBottom: 8,
-        flexShrink: 0,
-      }}>
-        <div>
+      {/* Show shared header for signed-in users, simple title for guests */}
+      {isSignedIn ? (
+        <AppHeader />
+      ) : (
+        <div style={{
+          paddingTop: 24,
+          paddingBottom: 8,
+          paddingLeft: 16,
+          paddingRight: 16,
+          flexShrink: 0,
+        }}>
           <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em' }}>
             RunScope
           </h1>
-            {isSignedIn && user?.name && (
-              <p style={{ margin: '2px 0 0', fontSize: 13, color: '#64748b' }}>
-                Hey, {user.name}
-              </p>
-            )}
         </div>
-        {isSignedIn && (
-          <button
-            onClick={signOut}
-            style={{
-              background: 'none',
-              border: '1px solid #334155',
-              borderRadius: 6,
-              color: '#64748b',
-              fontSize: 13,
-              padding: '6px 12px',
-              cursor: 'pointer',
-            }}
-          >
-            Sign Out
-          </button>
-        )}
-      </div>
+      )}
+
+      {/* Greeting for signed-in users */}
+      {isSignedIn && user?.name && (
+        <div style={{ padding: '12px 16px 0' }}>
+          <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>
+            Hey, {user.name}
+          </p>
+        </div>
+      )}
 
       {/* iOS install hint */}
       {showIosInstallHint && (
         <div style={{
-          margin: '12px 0',
+          margin: '12px 16px 0',
           padding: '12px 14px',
           backgroundColor: '#1e3a5f',
           borderRadius: 8,
@@ -92,11 +81,10 @@ export const HomePage = () => {
         flexDirection: 'column',
         justifyContent: 'center',
         gap: 12,
-        paddingBottom: 40,
+        padding: '0 16px 40px',
       }}>
         {!isSignedIn ? (
           <>
-            {/* Signed out state */}
             <p style={{
               margin: '0 0 8px',
               fontSize: 15,
@@ -123,7 +111,6 @@ export const HomePage = () => {
           </>
         ) : (
           <>
-            {/* Signed in state */}
             <ActionCard
               icon="🗺️"
               title="My Routes"

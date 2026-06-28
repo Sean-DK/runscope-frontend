@@ -18,7 +18,7 @@ export const useJoinEvent = () => {
 
     try {
       const event = await spectatorApi.getEventByCode(code.trim())
-      navigate(`/events/${event.id}/watch`)
+      navigate(`/events/${event.id}/units`)
     } catch {
       setError('Event not found. Check the code and try again.')
     } finally {

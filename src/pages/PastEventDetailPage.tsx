@@ -41,15 +41,14 @@ export const PastEventDetailPage = () => {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', backgroundColor: '#0f172a', overflow: 'auto' }}>
+    <div style={{ flex: 1, overflow: 'auto' }}>
       <PastEventDetail event={event} />
     </div>
   )
 }
 
 const centerStyle: React.CSSProperties = {
-  height: '100dvh',
-  backgroundColor: '#0f172a',
+  flex: 1,
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',

@@ -1,10 +1,15 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useRouteStore } from '../store/routeStore'
+import { useUnits } from '../../../shared/hooks/useUnits'
 import { routesApi } from '../api'
 import { Route } from '../types'
 
-const formatDistance = (meters: number): string => {
+const formatDistance = (meters: number, useMetric: boolean): string => {
+  if (useMetric) {
+    const km = meters / 1000
+    return `${km.toFixed(2)} km`
+  }
   const miles = meters / 1609.344
   return `${miles.toFixed(2)} mi`
 }
@@ -19,12 +24,13 @@ const formatDate = (iso: string): string =>
 export const RouteList = () => {
   const navigate = useNavigate()
   const { routes, isLoadingRoutes, setRoutes, setLoadingRoutes } = useRouteStore()
+  const { useMetric } = useUnits()
 
   useEffect(() => {
     setLoadingRoutes(true)
     routesApi.getAll()
       .then(setRoutes)
-      .catch(() => {}) // error handling can be added later
+      .catch(() => {})
       .finally(() => setLoadingRoutes(false))
   }, [])
 
@@ -57,6 +63,7 @@ export const RouteList = () => {
           key={route.id}
           route={route}
           isLast={i === routes.length - 1}
+          useMetric={useMetric}
           onClick={() => navigate(`/routes/${route.id}`)}
         />
       ))}
@@ -67,10 +74,12 @@ export const RouteList = () => {
 const RouteRow = ({
   route,
   isLast,
+  useMetric,
   onClick,
 }: {
   route: Route
   isLast: boolean
+  useMetric: boolean
   onClick: () => void
 }) => (
   <div
@@ -99,7 +108,7 @@ const RouteRow = ({
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <div style={{ textAlign: 'right' }}>
         <div style={{ fontSize: 14, color: '#94a3b8' }}>
-          {formatDistance(route.totalDistance)}
+          {formatDistance(route.totalDistance, useMetric)}
         </div>
         <div style={{ fontSize: 12, color: '#64748b' }}>
           {route.waypoints.length} waypoints

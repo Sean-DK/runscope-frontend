@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useSpectatorStore } from '../features/spectator/store/spectatorStore'
 import { useSpectatorSignalR } from '../features/spectator/hooks/useSpectatorSignalR'
 import { SpectatorMap } from '../features/spectator/components/SpectatorMap'
@@ -8,6 +8,8 @@ import { spectatorApi } from '../features/spectator/api'
 
 export const SpectatorPage = () => {
   const { id } = useParams<{ id: string }>()
+  const [searchParams] = useSearchParams()
+  const useMetric = searchParams.get('units') === 'kilometers'
   const navigate = useNavigate()
   const { event, error, setEvent, setError, clearSpectator } = useSpectatorStore()
 
@@ -19,6 +21,12 @@ export const SpectatorPage = () => {
     if (!id) {
       navigate('/join')
       return
+    }
+
+    // If no units selected yet, go to unit select first
+    if (!searchParams.get('units')) {
+        navigate(`/events/${id}/units`)
+        return
     }
 
     spectatorApi.getEventById(id)
@@ -75,7 +83,7 @@ export const SpectatorPage = () => {
         borderTop: '1px solid #1e293b',
         overflow: 'auto',
       }}>
-        <SpectatorStats />
+        <SpectatorStats useMetric={useMetric} />
       </div>
     </div>
   )

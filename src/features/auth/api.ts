@@ -1,5 +1,5 @@
 import { fetchClient } from '../../shared/utils/fetchClient'
-import { AuthUser } from './types'
+import { AuthUser, UnitPreference } from './types'
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? ''
 
@@ -10,6 +10,13 @@ export const authApi = {
     } catch {
       return null
     }
+  },
+
+  updatePreferences: async (unitPreference: UnitPreference): Promise<void> => {
+    await fetchClient('/api/users/me/preferences', {
+        method: 'PATCH',
+        body: { unitPreference },
+    })
   },
 
   getGoogleSignInUrl: (returnUrl: string): string => {

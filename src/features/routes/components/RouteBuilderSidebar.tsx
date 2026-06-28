@@ -12,7 +12,7 @@ const formatDistance = (meters: number, useMetric: boolean): string => {
 }
 
 interface RouteBuilderSidebarProps {
-  useMetric?: boolean
+  useMetric: boolean
   onClose: () => void
   onCancel: () => void
 }

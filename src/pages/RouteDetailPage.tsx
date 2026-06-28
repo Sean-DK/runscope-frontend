@@ -60,7 +60,7 @@ export const RouteDetailPage = () => {
   }
 
   return (
-    <div style={{ height: '100dvh', backgroundColor: '#0f172a', overflow: 'auto' }}>
+    <div style={{ flex: 1, overflow: 'auto' }}>
       <RouteDetail
         route={route}
         onDelete={handleDelete}
@@ -78,8 +78,7 @@ export const RouteDetailPage = () => {
 }
 
 const centerStyle: React.CSSProperties = {
-  height: '100dvh',
-  backgroundColor: '#0f172a',
+  flex: 1,
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',

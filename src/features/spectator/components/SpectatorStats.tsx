@@ -2,8 +2,17 @@ import { useSpectatorStore } from '../store/spectatorStore'
 import { EventStatusBadge } from '../../events/components/EventStatusBadge'
 import { CANCEL_REASONS } from '../../events/types'
 
-const formatPace = (secondsPerMile: number | null): string => {
+const MILE_IN_METERS = 1609.344
+const KM_IN_METERS = 1000
+
+const formatPace = (secondsPerMile: number | null, useMetric: boolean): string => {
   if (secondsPerMile === null) return '--'
+  if (useMetric) {
+    const secondsPerKm = secondsPerMile / (MILE_IN_METERS / KM_IN_METERS)
+    const m = Math.floor(secondsPerKm / 60)
+    const s = Math.round(secondsPerKm % 60)
+    return `${m}:${String(s).padStart(2, '0')} /km`
+  }
   const m = Math.floor(secondsPerMile / 60)
   const s = Math.round(secondsPerMile % 60)
   return `${m}:${String(s).padStart(2, '0')} /mi`
@@ -18,9 +27,13 @@ const formatElapsed = (seconds: number | null): string => {
   return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`
 }
 
-const formatDistance = (meters: number | null): string => {
+const formatDistance = (meters: number | null, useMetric: boolean): string => {
   if (meters === null) return '--'
-  const miles = meters / 1609.344
+  if (useMetric) {
+    const km = meters / KM_IN_METERS
+    return `${km.toFixed(2)} km`
+  }
+  const miles = meters / MILE_IN_METERS
   return `${miles.toFixed(2)} mi`
 }
 
@@ -46,7 +59,11 @@ const formatEstimatedFinish = (
   return { duration, timeOfDay }
 }
 
-export const SpectatorStats = () => {
+interface SpectatorStatsProps {
+  useMetric: boolean
+}
+
+export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
   const { event, stats, connectionStatus } = useSpectatorStore()
 
   if (!event) return null
@@ -65,7 +82,7 @@ export const SpectatorStats = () => {
       height: '100%',
       overflow: 'auto',
     }}>
-  
+
       {/* Event header */}
       <div style={{
         display: 'flex',
@@ -82,8 +99,8 @@ export const SpectatorStats = () => {
         </div>
         <EventStatusBadge status={event.status} />
       </div>
-  
-      {/* Connection/waiting status — shown above stats, not instead of them */}
+
+      {/* Connection/waiting status */}
       {connectionStatus !== 'Connected' && (
         <div style={{
           padding: '8px 16px',
@@ -99,8 +116,8 @@ export const SpectatorStats = () => {
           </p>
         </div>
       )}
-  
-      {/* Pending hint — shown when connected but racer hasn't crossed start yet */}
+
+      {/* Pending hint */}
       {connectionStatus === 'Connected' && event.status === 'Pending' && (
         <div style={{
           padding: '8px 16px',
@@ -112,7 +129,7 @@ export const SpectatorStats = () => {
           </p>
         </div>
       )}
-  
+
       {/* Cancelled notice */}
       {event.status === 'Cancelled' && (
         <div style={{
@@ -129,8 +146,8 @@ export const SpectatorStats = () => {
           </p>
         </div>
       )}
-  
-      {/* Stats grid — always visible, shows -- when no data */}
+
+      {/* Stats grid */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
@@ -144,11 +161,11 @@ export const SpectatorStats = () => {
       }}>
         <StatCell
           label="Current Pace"
-          value={formatPace(stats.currentPaceSecondsPerMile)}
+          value={formatPace(stats.currentPaceSecondsPerMile, useMetric)}
         />
         <StatCell
           label="Avg Pace"
-          value={formatPace(stats.averagePaceSecondsPerMile)}
+          value={formatPace(stats.averagePaceSecondsPerMile, useMetric)}
         />
         <StatCell
           label="Elapsed Time"
@@ -156,7 +173,7 @@ export const SpectatorStats = () => {
         />
         <StatCell
           label="Distance Remaining"
-          value={formatDistance(stats.distanceRemainingMeters)}
+          value={formatDistance(stats.distanceRemainingMeters, useMetric)}
         />
         <StatCell
           label="Est. Finish In"
@@ -174,14 +191,11 @@ export const SpectatorStats = () => {
 const StatCell = ({
   label,
   value,
-  wide = false,
 }: {
   label: string
   value: string
-  wide?: boolean
 }) => (
   <div style={{
-    gridColumn: wide ? 'span 1' : 'span 1',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',

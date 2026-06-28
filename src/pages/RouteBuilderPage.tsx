@@ -4,7 +4,17 @@ import { RouteBuilderMap } from '../features/routes/components/RouteBuilderMap'
 import { RouteBuilderSidebar } from '../features/routes/components/RouteBuilderSidebar'
 import { useRouteBuilder } from '../features/routes/hooks/useRouteBuilder'
 import { useRouteStore } from '../features/routes/store/routeStore'
+import { useUnits } from '../shared/hooks/useUnits'
 import { routesApi } from '../features/routes/api'
+
+const formatDistance = (meters: number, useMetric: boolean): string => {
+  if (useMetric) {
+    const km = meters / 1000
+    return `${km.toFixed(2)} km`
+  }
+  const miles = meters / 1609.344
+  return `${miles.toFixed(2)} mi`
+}
 
 export const RouteBuilderPage = () => {
   const [searchParams] = useSearchParams()
@@ -13,6 +23,9 @@ export const RouteBuilderPage = () => {
   const { initNew, initEdit, clearDraft } = useRouteBuilder()
   const store = useRouteStore()
   const navigate = useNavigate()
+  const { useMetric } = useUnits()
+
+  const totalDistance = store.draftRoute?.totalDistance ?? 0
 
   const handleCancel = () => {
     if (store.isDirty) {
@@ -39,7 +52,7 @@ export const RouteBuilderPage = () => {
       {/* Map always fills the screen */}
       <RouteBuilderMap />
 
-      {/* Backdrop — only visible when sidebar is open, closes it on tap */}
+      {/* Backdrop */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
@@ -65,10 +78,11 @@ export const RouteBuilderPage = () => {
         <RouteBuilderSidebar
           onClose={() => setSidebarOpen(false)}
           onCancel={handleCancel}
+          useMetric={useMetric}
         />
       </div>
 
-      {/* Toggle button — hidden when sidebar is open since backdrop handles closing */}
+      {/* Toggle button */}
       {!sidebarOpen && (
         <button
           onClick={() => setSidebarOpen(true)}
@@ -94,6 +108,30 @@ export const RouteBuilderPage = () => {
         >
           ☰
         </button>
+      )}
+
+      {/* Distance pill — only shown when sidebar is closed and route has distance */}
+      {!sidebarOpen && totalDistance > 0 && (
+        <div style={{
+          position: 'absolute',
+          bottom: 24,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 30,
+          backgroundColor: '#1e1e2e',
+          color: '#e2e8f0',
+          padding: '8px 16px',
+          borderRadius: 999,
+          fontSize: 14,
+          fontWeight: 700,
+          fontFamily: 'monospace',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+          border: '1px solid #334155',
+          whiteSpace: 'nowrap',
+          pointerEvents: 'none', // don't block map interaction
+        }}>
+          {formatDistance(totalDistance, useMetric)}
+        </div>
       )}
     </div>
   )

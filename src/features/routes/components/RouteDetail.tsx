@@ -1,12 +1,18 @@
 import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Map, { Layer, MapRef, Source } from 'react-map-gl/mapbox'
+import { Feature, LineString } from 'geojson'
 import { Route } from '../types'
+import { useUnits } from '../../../shared/hooks/useUnits'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string
 
-const formatDistance = (meters: number): string => {
+const formatDistance = (meters: number, useMetric: boolean): string => {
+  if (useMetric) {
+    const km = meters / 1000
+    return `${km.toFixed(2)} km`
+  }
   const miles = meters / 1609.344
   return `${miles.toFixed(2)} mi`
 }
@@ -18,8 +24,6 @@ const formatDate = (iso: string): string =>
     year: 'numeric',
   })
 
-// Compute a bounding box from all waypoint coordinates so we can
-// fit the map camera to show the entire route on load
 const getRouteBounds = (
   route: Route
 ): [[number, number], [number, number]] | null => {
@@ -42,8 +46,9 @@ interface RouteDetailProps {
 export const RouteDetail = ({ route, onDelete, onShare, isDeleting }: RouteDetailProps) => {
   const navigate = useNavigate()
   const mapRef = useRef<MapRef>(null)
+  const { useMetric } = useUnits()
 
-  const routeGeoJson: GeoJSON.Feature<GeoJSON.LineString> = {
+  const routeGeoJson: Feature<LineString> = {
     type: 'Feature',
     geometry: {
       type: 'LineString',
@@ -134,7 +139,7 @@ export const RouteDetail = ({ route, onDelete, onShare, isDeleting }: RouteDetai
         borderBottom: '1px solid #1e293b',
         flexShrink: 0,
       }}>
-        <StatCell label="Distance" value={formatDistance(route.totalDistance)} />
+        <StatCell label="Distance" value={formatDistance(route.totalDistance, useMetric)} />
         <StatCell label="Waypoints" value={`${route.waypoints.length}`} />
         <StatCell label="Last Updated" value={formatDate(route.updatedAt)} />
       </div>
@@ -167,10 +172,10 @@ export const RouteDetail = ({ route, onDelete, onShare, isDeleting }: RouteDetai
         flexShrink: 0,
       }}>
         <button
-            onClick={onShare}
-            style={secondaryButtonStyle}
+          onClick={onShare}
+          style={secondaryButtonStyle}
         >
-            Share
+          Share
         </button>
         <button
           onClick={() => navigate(`/route-builder?edit=${route.id}`)}

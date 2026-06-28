@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { useAuth } from './features/auth/hooks/useAuth'
-import { AuthGuard } from './features/auth/components/AuthGuard'
+import { AppLayout } from './shared/components/AppLayout'
 import { HomePage } from './pages/HomePage'
 import { SignInPage } from './pages/SignInPage'
 import { AuthCallbackPage } from './pages/AuthCallbackPage'
@@ -12,6 +12,7 @@ import { SharedRoutePage } from './pages/SharedRoutePage'
 import { EventSetupPage } from './pages/EventSetupPage'
 import { EventHostPage } from './pages/EventHostPage'
 import { JoinEventPage } from './pages/JoinEventPage'
+import { UnitSelectPage } from './pages/UnitSelectPage'
 import { SpectatorPage } from './pages/SpectatorPage'
 import { PastEventsPage } from './pages/PastEventsPage'
 import { PastEventDetailPage } from './pages/PastEventDetailPage'
@@ -25,22 +26,25 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      {/* Public routes */}
+      {/* Public routes — no header, no auth */}
       <Route path="/" element={<HomePage />} />
       <Route path="/sign-in" element={<SignInPage />} />
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/join" element={<JoinEventPage />} />
+      <Route path="/events/:id/units" element={<UnitSelectPage />} />
       <Route path="/events/:id/watch" element={<SpectatorPage />} />
       <Route path="/routes/shared/:id" element={<SharedRoutePage />} />
 
-      {/* Protected routes */}
-      <Route path="/route-builder" element={<AuthGuard><RouteBuilderPage /></AuthGuard>} />
-      <Route path="/routes" element={<AuthGuard><RoutesPage /></AuthGuard>} />
-      <Route path="/routes/:id" element={<AuthGuard><RouteDetailPage /></AuthGuard>} />
-      <Route path="/events/past" element={<AuthGuard><PastEventsPage /></AuthGuard>} />
-      <Route path="/events/past/:id" element={<AuthGuard><PastEventDetailPage /></AuthGuard>} />
-      <Route path="/events/new" element={<AuthGuard><EventSetupPage /></AuthGuard>} />
-      <Route path="/events/:id/host" element={<AuthGuard><EventHostPage /></AuthGuard>} />
+      {/* Authenticated routes — AppLayout provides AuthGuard + AppHeader */}
+      <Route path="/routes" element={<AppLayout><RoutesPage /></AppLayout>} />
+      <Route path="/routes/:id" element={<AppLayout><RouteDetailPage /></AppLayout>} />
+      <Route path="/events/new" element={<AppLayout><EventSetupPage /></AppLayout>} />
+      <Route path="/events/past" element={<AppLayout><PastEventsPage /></AppLayout>} />
+      <Route path="/events/past/:id" element={<AppLayout><PastEventDetailPage /></AppLayout>} />
+
+      {/* Authenticated but full-screen — AppLayout with no header */}
+      <Route path="/route-builder" element={<AppLayout hideHeader><RouteBuilderPage /></AppLayout>} />
+      <Route path="/events/:id/host" element={<AppLayout hideHeader><EventHostPage /></AppLayout>} />
     </Routes>
   )
 }

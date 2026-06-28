@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useEventHost } from '../features/events/hooks/useEventHost'
+import { useUnits } from '../shared/hooks/useUnits'
 import { routesApi } from '../features/routes/api'
 import { Route } from '../features/routes/types'
 
-const formatDistance = (meters: number): string => {
+const formatDistance = (meters: number, useMetric: boolean): string => {
+  if (useMetric) {
+    const km = meters / 1000
+    return `${km.toFixed(2)} km`
+  }
   const miles = meters / 1609.344
   return `${miles.toFixed(2)} mi`
 }
@@ -14,6 +19,7 @@ export const EventSetupPage = () => {
   const [searchParams] = useSearchParams()
   const routeId = searchParams.get('routeId')
   const { startEvent, isStarting, error, activeEvent } = useEventHost()
+  const { useMetric } = useUnits()
   const [route, setRoute] = useState<Route | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -29,7 +35,6 @@ export const EventSetupPage = () => {
       .finally(() => setIsLoading(false))
   }, [routeId, navigate])
 
-  // Navigate to host screen once event is created
   useEffect(() => {
     if (activeEvent) navigate(`/events/${activeEvent.id}/host`)
   }, [activeEvent, navigate])
@@ -55,17 +60,16 @@ export const EventSetupPage = () => {
 
   return (
     <div style={{
-      minHeight: '100dvh',
-      backgroundColor: '#0f172a',
+      flex: 1,
       color: '#e2e8f0',
       display: 'flex',
       flexDirection: 'column',
-      padding: '24px 16px',
+      padding: '16px',
       gap: '20px',
       boxSizing: 'border-box',
     }}>
 
-      {/* Header */}
+      {/* Back button + page title */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <button
           onClick={() => navigate(`/routes/${routeId}`)}
@@ -98,7 +102,7 @@ export const EventSetupPage = () => {
         </p>
         <p style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>{route.name}</p>
         <p style={{ margin: 0, fontSize: 14, color: '#94a3b8' }}>
-          {formatDistance(route.totalDistance)} · {route.waypoints.length} waypoints
+          {formatDistance(route.totalDistance, useMetric)} · {route.waypoints.length} waypoints
         </p>
       </div>
 
@@ -157,8 +161,7 @@ export const EventSetupPage = () => {
 }
 
 const centerStyle: React.CSSProperties = {
-  height: '100dvh',
-  backgroundColor: '#0f172a',
+  flex: 1,
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
