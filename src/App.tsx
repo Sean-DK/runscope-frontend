@@ -16,6 +16,7 @@ import { UnitSelectPage } from './pages/UnitSelectPage'
 import { SpectatorPage } from './pages/SpectatorPage'
 import { PastEventsPage } from './pages/PastEventsPage'
 import { PastEventDetailPage } from './pages/PastEventDetailPage'
+import { YouPage } from './pages/YouPage'
 
 const AppRoutes = () => {
   const { checkSession } = useAuth()
@@ -36,6 +37,7 @@ const AppRoutes = () => {
       <Route path="/routes/shared/:id" element={<SharedRoutePage />} />
 
       {/* Authenticated routes — AppLayout provides AuthGuard + AppHeader */}
+      <Route path="/you" element={<AppLayout><YouPage /></AppLayout>} />
       <Route path="/routes" element={<AppLayout><RoutesPage /></AppLayout>} />
       <Route path="/routes/:id" element={<AppLayout><RouteDetailPage /></AppLayout>} />
       <Route path="/events/new" element={<AppLayout><EventSetupPage /></AppLayout>} />

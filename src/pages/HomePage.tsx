@@ -9,17 +9,53 @@ import { C, F, screenPad } from '../shared/ds'
 import { StatCard } from '../shared/components/StatCard'
 
 // ──────────────────────────────────────────────────────────
+// Loading screen
+// ──────────────────────────────────────────────────────────
+const LoadingScreen = () => (
+  <div style={{
+    minHeight:       '100dvh',
+    backgroundColor: C.base,
+    display:         'flex',
+    flexDirection:   'column',
+    alignItems:      'center',
+    justifyContent:  'center',
+    gap:             16,
+  }}>
+    <span style={{
+      fontFamily:    F.display,
+      fontSize:      24,
+      fontWeight:    700,
+      letterSpacing: '-.02em',
+      color:         C.textPrimary,
+    }}>
+      RunScope
+    </span>
+    <div style={{
+      width:        32,
+      height:       32,
+      borderRadius: '50%',
+      border:       `2.5px solid ${C.hairline}`,
+      borderTopColor: C.volt,
+      animation:    'rsSpin 0.7s linear infinite',
+    }} />
+    <style>{`
+      @keyframes rsSpin { to { transform: rotate(360deg); } }
+    `}</style>
+  </div>
+)
+
+// ──────────────────────────────────────────────────────────
 // Signed-out home
 // ──────────────────────────────────────────────────────────
 const SignedOutHome = () => {
   const navigate = useNavigate()
   return (
     <div style={{
-      minHeight: '100dvh',
+      minHeight:       '100dvh',
       backgroundColor: C.base,
-      display: 'flex',
-      flexDirection: 'column',
-      padding: `0 ${screenPad}px`,
+      display:         'flex',
+      flexDirection:   'column',
+      padding:         `0 ${screenPad}px`,
     }}>
       <AppHeader />
 
@@ -27,13 +63,13 @@ const SignedOutHome = () => {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingBottom: 32 }}>
         <LivePill />
         <h1 style={{
-          fontFamily: F.display,
-          fontSize: 36,
-          fontWeight: 700,
-          lineHeight: 1.15,
+          fontFamily:    F.display,
+          fontSize:      36,
+          fontWeight:    700,
+          lineHeight:    1.15,
           letterSpacing: '-.02em',
-          color: C.textPrimary,
-          margin: '16px 0 10px',
+          color:         C.textPrimary,
+          margin:        '16px 0 10px',
         }}>
           Share every mile,<br />the moment it happens.
         </h1>
@@ -90,27 +126,27 @@ const SignedInHome = () => {
   }, [])
 
   const firstName = user?.name?.split(' ')[0] ?? 'there'
-  const initials = user?.name
+  const initials  = user?.name
     ? user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
     : '?'
 
-  const hour = new Date().getHours()
+  const hour     = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
   return (
     <div style={{
-      flex: 1,
-      display: 'flex',
-      flexDirection: 'column',
+      flex:            1,
+      display:         'flex',
+      flexDirection:   'column',
       backgroundColor: C.base,
-      overflow: 'auto',
+      overflow:        'auto',
     }}>
       {/* Greeting header */}
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
+        display:        'flex',
+        alignItems:     'center',
         justifyContent: 'space-between',
-        padding: `20px ${screenPad}px 0`,
+        padding:        `20px ${screenPad}px 0`,
       }}>
         <div>
           <p style={{ fontFamily: F.ui, fontSize: 14, color: C.textSecondary, margin: '0 0 2px' }}>
@@ -121,19 +157,19 @@ const SignedInHome = () => {
           </h1>
         </div>
         <div style={{
-          width:           44,
-          height:          44,
-          borderRadius:    '50%',
-          background:      C.elevated,
-          border:          `1px solid ${C.hairline}`,
-          display:         'flex',
-          alignItems:      'center',
-          justifyContent:  'center',
-          fontFamily:      F.display,
-          fontSize:        15,
-          fontWeight:      700,
-          color:           C.textPrimary,
-          flexShrink:      0,
+          width:          44,
+          height:         44,
+          borderRadius:   '50%',
+          background:     C.elevated,
+          border:         `1px solid ${C.hairline}`,
+          display:        'flex',
+          alignItems:     'center',
+          justifyContent: 'center',
+          fontFamily:     F.display,
+          fontSize:       15,
+          fontWeight:     700,
+          color:          C.textPrimary,
+          flexShrink:     0,
         }}>
           {initials}
         </div>
@@ -167,7 +203,7 @@ const SignedInHome = () => {
         {/* Stat cards grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <StatCard
-            label="My routes"
+            label="Routes"
             value={routeCount}
             icon={<RouteIcon />}
             onClick={() => navigate('/routes')}
@@ -223,8 +259,9 @@ const SignedInHome = () => {
 // Root component
 // ──────────────────────────────────────────────────────────
 export const HomePage = () => {
-  const { isSignedIn } = useAuth()
+  const { isSignedIn, isLoading } = useAuth()
 
+  if (isLoading) return <LoadingScreen />
   if (!isSignedIn) return <SignedOutHome />
 
   return (
@@ -270,18 +307,18 @@ const ChoiceCard = ({
   <button
     onClick={onClick}
     style={{
-      display:      'flex',
-      alignItems:   'center',
+      display:        'flex',
+      alignItems:     'center',
       justifyContent: 'space-between',
-      gap:          16,
-      padding:      22,
-      borderRadius: 22,
-      border:       primary ? 'none' : `1px solid ${C.hairline}`,
-      background:   primary ? C.volt : C.surface,
-      color:        primary ? C.base : C.textPrimary,
-      cursor:       'pointer',
-      textAlign:    'left',
-      width:        '100%',
+      gap:            16,
+      padding:        22,
+      borderRadius:   22,
+      border:         primary ? 'none' : `1px solid ${C.hairline}`,
+      background:     primary ? C.volt : C.surface,
+      color:          primary ? C.base : C.textPrimary,
+      cursor:         'pointer',
+      textAlign:      'left',
+      width:          '100%',
     }}
   >
     <div style={{ flex: 1 }}>
