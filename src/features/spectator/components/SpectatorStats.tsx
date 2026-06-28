@@ -119,7 +119,7 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
               zIndex:        10,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
-                <span style={{ fontFamily: F.ui, fontSize: 13, fontWeight: 700, color: C.textPrimary }}>
+                <span style={{ fontFamily: F.ui, fontSize: 13, color: C.textSecondary }}>
                   Distance to finish
                 </span>
                 <span style={{ fontFamily: F.display, fontSize: 13, fontWeight: 600, color: C.volt }}>
@@ -135,10 +135,10 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
                 <div style={{ height: '100%', width: `${pct * 100}%`, background: C.volt, borderRadius: 4, transition: 'width .5s ease' }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-                <span style={{ fontFamily: F.ui, fontSize: 11, color: C.textTertiary }}>
+                <span style={{ fontFamily: F.ui, fontSize: 11, color: C.textSecondary }}>
                   {distCovered} done
                 </span>
-                <span style={{ fontFamily: F.ui, fontSize: 11, color: C.textTertiary }}>
+                <span style={{ fontFamily: F.ui, fontSize: 11, color: C.textSecondary }}>
                   {distTotal} total
                 </span>
               </div>
