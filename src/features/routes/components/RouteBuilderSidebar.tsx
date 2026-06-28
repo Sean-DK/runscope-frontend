@@ -26,20 +26,20 @@ export const RouteBuilderSidebar = ({ useMetric = false, onClose, onCancel }: Pr
 
   return (
     <div style={{
-      width:           280,
-      height:          '100%',
-      background:      'rgba(10,11,13,0.94)',
-      backdropFilter:  'blur(14px)',
-      borderRight:     `1px solid ${C.hairline}`,
-      boxShadow:       '4px 0 24px rgba(0,0,0,0.5)',
-      color:           C.textPrimary,
-      display:         'flex',
-      flexDirection:   'column',
-      overflowY:       'auto',
-      boxSizing:       'border-box',
+      width:          280,
+      height:         '100%',
+      background:     'rgba(10,11,13,0.94)',
+      backdropFilter: 'blur(14px)',
+      borderRight:    `1px solid ${C.hairline}`,
+      boxShadow:      '4px 0 24px rgba(0,0,0,0.5)',
+      color:          C.textPrimary,
+      display:        'flex',
+      flexDirection:  'column',
+      boxSizing:      'border-box',
     }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 18px 12px' }}>
+
+      {/* Header — fixed */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 18px 12px', flexShrink: 0 }}>
         <span style={{ fontFamily: F.ui, fontSize: 13, fontWeight: 700, color: C.textSecondary }}>
           Building route
         </span>
@@ -48,9 +48,9 @@ export const RouteBuilderSidebar = ({ useMetric = false, onClose, onCancel }: Pr
         </button>
       </div>
 
-      {/* Distance card */}
+      {/* Distance card — fixed */}
       {dist > 0 && (
-        <div style={{ margin: '0 14px 16px', padding: '14px 16px', background: C.elevated, border: `1px solid ${C.hairline}`, borderRadius: 14 }}>
+        <div style={{ margin: '0 14px 16px', padding: '14px 16px', background: C.elevated, border: `1px solid ${C.hairline}`, borderRadius: 14, flexShrink: 0 }}>
           <div style={{ fontFamily: F.display, fontSize: 28, fontWeight: 700, letterSpacing: '-.02em', color: C.textPrimary }}>
             {fmtDist(dist, useMetric)}
           </div>
@@ -60,8 +60,8 @@ export const RouteBuilderSidebar = ({ useMetric = false, onClose, onCancel }: Pr
         </div>
       )}
 
-      {/* Route name */}
-      <div style={{ padding: '0 14px 14px' }}>
+      {/* Route name — fixed */}
+      <div style={{ padding: '0 14px 14px', flexShrink: 0 }}>
         <input
           type="text"
           value={draftRoute.name}
@@ -83,8 +83,8 @@ export const RouteBuilderSidebar = ({ useMetric = false, onClose, onCancel }: Pr
         />
       </div>
 
-      {/* Waypoint list */}
-      <div style={{ flex: 1, padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+      {/* Waypoint list — scrollable, takes remaining space */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 14px' }}>
         <p style={{ fontFamily: F.ui, fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: C.textTertiary, margin: '0 0 10px' }}>
           Waypoints
         </p>
@@ -119,16 +119,16 @@ export const RouteBuilderSidebar = ({ useMetric = false, onClose, onCancel }: Pr
               <div
                 onClick={() => setSelectedWaypoint(isSel ? null : wp.id)}
                 style={{
-                  flex:         1,
-                  display:      'flex',
-                  alignItems:   'center',
+                  flex:           1,
+                  display:        'flex',
+                  alignItems:     'center',
                   justifyContent: 'space-between',
-                  padding:      '7px 10px',
-                  borderRadius: 10,
-                  background:   isSel ? C.elevated : 'transparent',
-                  border:       `1px solid ${isSel ? C.volt : 'transparent'}`,
-                  cursor:       'pointer',
-                  minHeight:    36,
+                  padding:        '7px 10px',
+                  borderRadius:   10,
+                  background:     isSel ? C.elevated : 'transparent',
+                  border:         `1px solid ${isSel ? C.volt : 'transparent'}`,
+                  cursor:         'pointer',
+                  minHeight:      36,
                 }}
               >
                 <span style={{ fontFamily: F.ui, fontSize: 13, fontWeight: 600, color: isSel ? C.volt : C.textPrimary }}>
@@ -146,8 +146,8 @@ export const RouteBuilderSidebar = ({ useMetric = false, onClose, onCancel }: Pr
         })}
       </div>
 
-      {/* Import */}
-      <div style={{ padding: '12px 14px 0' }}>
+      {/* Import — fixed */}
+      <div style={{ padding: '12px 14px 0', flexShrink: 0 }}>
         <input ref={fileInputRef} type="file" accept=".gpx,.kml" style={{ display: 'none' }}
           onChange={(e) => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = '' }}
         />
@@ -156,15 +156,15 @@ export const RouteBuilderSidebar = ({ useMetric = false, onClose, onCancel }: Pr
         </button>
       </div>
 
-      {/* Error */}
+      {/* Error — fixed */}
       {error && (
-        <div style={{ margin: '10px 14px 0', padding: '10px 12px', background: 'rgba(255,82,71,.1)', border: `1px solid rgba(255,82,71,.25)`, borderRadius: 10 }}>
+        <div style={{ margin: '10px 14px 0', padding: '10px 12px', background: 'rgba(255,82,71,.1)', border: `1px solid rgba(255,82,71,.25)`, borderRadius: 10, flexShrink: 0 }}>
           <p style={{ fontFamily: F.ui, fontSize: 13, color: C.red, margin: 0 }}>{error}</p>
         </div>
       )}
 
-      {/* Actions */}
-      <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* Actions — fixed at bottom */}
+      <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
         <button
           onClick={async () => { const ok = await handleSave(); if (ok) navigate('/routes') }}
           disabled={isSaving || !isDirty}

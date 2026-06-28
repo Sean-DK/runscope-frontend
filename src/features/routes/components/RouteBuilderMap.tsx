@@ -1,14 +1,15 @@
 import { useCallback, useRef } from 'react'
 import Map, { Layer, MapMouseEvent, MapRef, Source } from 'react-map-gl/mapbox'
+import { Feature, LineString } from 'geojson'
 import { useRouteBuilder } from '../hooks/useRouteBuilder'
 import { WaypointMarker } from './WaypointMarker'
-import 'mapbox-gl/dist/mapbox-gl.css'
 import { getOrderedRouteCoordinates } from '../utils/routeGeometry'
+import 'mapbox-gl/dist/mapbox-gl.css'
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string
 
 const INITIAL_VIEW = {
-  longitude: -98.5795,  // center of US — will relocate to user on mount
+  longitude: -98.5795,
   latitude: 39.8283,
   zoom: 4,
 }
@@ -24,8 +25,20 @@ export const RouteBuilderMap = () => {
     setSelectedWaypoint,
   } = useRouteBuilder()
 
-  // Fly to user's location on first load
   const handleMapLoad = useCallback(() => {
+    // If editing an existing route with waypoints, fit the map to the route bounds
+    if (draftRoute?.id && draftRoute.waypoints.length > 0) {
+      const lngs = draftRoute.waypoints.map((wp) => wp.coordinates[0])
+      const lats = draftRoute.waypoints.map((wp) => wp.coordinates[1])
+      const bounds: [[number, number], [number, number]] = [
+        [Math.min(...lngs), Math.min(...lats)],
+        [Math.max(...lngs), Math.max(...lats)],
+      ]
+      mapRef.current?.fitBounds(bounds, { padding: 64, duration: 0 })
+      return
+    }
+
+    // New route — fly to user's current location
     navigator.geolocation.getCurrentPosition((pos) => {
       mapRef.current?.flyTo({
         center: [pos.coords.longitude, pos.coords.latitude],
@@ -33,16 +46,14 @@ export const RouteBuilderMap = () => {
         duration: 1500,
       })
     })
-  }, [])
+  }, [draftRoute?.id, draftRoute?.waypoints])
 
   const handleClick = useCallback((e: MapMouseEvent) => {
-    // Ignore clicks on markers (they have their own handlers)
     if ((e.originalEvent.target as HTMLElement).closest('.mapboxgl-marker')) return
     handleMapClick([e.lngLat.lng, e.lngLat.lat])
   }, [handleMapClick])
 
-  // Build GeoJSON from all segment paths
-  const routeGeoJson: GeoJSON.Feature<GeoJSON.LineString> = {
+  const routeGeoJson: Feature<LineString> = {
     type: 'Feature',
     geometry: {
       type: 'LineString',
@@ -61,10 +72,8 @@ export const RouteBuilderMap = () => {
       onClick={handleClick}
       onLoad={handleMapLoad}
     >
-      {/* Route line */}
       {routeGeoJson.geometry.coordinates.length > 0 && (
         <Source id="route" type="geojson" data={routeGeoJson}>
-          {/* Outline for contrast */}
           <Layer
             id="route-outline"
             type="line"
@@ -75,7 +84,6 @@ export const RouteBuilderMap = () => {
             }}
             layout={{ 'line-join': 'round', 'line-cap': 'round' }}
           />
-          {/* Main route line */}
           <Layer
             id="route-line"
             type="line"
@@ -89,7 +97,6 @@ export const RouteBuilderMap = () => {
         </Source>
       )}
 
-      {/* Waypoint markers */}
       {orderedWaypoints.map((wp, i) => (
         <WaypointMarker
           key={wp.id}

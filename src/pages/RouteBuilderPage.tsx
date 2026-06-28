@@ -56,6 +56,19 @@ export const RouteBuilderPage = () => {
       {/* Map always fills the screen */}
       <RouteBuilderMap />
 
+      {/* Backdrop — blocks map interaction and closes sidebar on tap */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            zIndex: 10,
+          }}
+        />
+      )}
+
       {/* Left drawer */}
       <div style={{
         position:   'absolute',
@@ -73,7 +86,7 @@ export const RouteBuilderPage = () => {
         />
       </div>
 
-      {/* Floating top-left: back button + open drawer */}
+      {/* Floating top-left: back button + distance chip */}
       {!sidebarOpen && (
         <div style={{
           position: 'absolute', top: 14, left: 14, zIndex: 30,
@@ -85,7 +98,6 @@ export const RouteBuilderPage = () => {
             </svg>
           </button>
 
-          {/* Route name chip */}
           <div style={{
             padding:       '9px 14px',
             borderRadius:  12,
@@ -101,24 +113,16 @@ export const RouteBuilderPage = () => {
             gap:           6,
             cursor:        'pointer',
           }} onClick={() => setSidebarOpen(true)}>
-            {store.draftRoute ? fmtDist(store.draftRoute.totalDistance, useMetric) : '--' }
+            {store.draftRoute ? fmtDist(store.draftRoute.totalDistance, useMetric) : '--'}
           </div>
         </div>
       )}
 
-      {/* Floating right: locate + undo */}
+      {/* Floating right: undo */}
       <div style={{
         position: 'absolute', top: 14, right: 14, zIndex: 30,
         display: 'flex', flexDirection: 'column', gap: 8,
       }}>
-        {/* Locate (no-op placeholder) */}
-        <button style={mapOverlayBtn}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.textPrimary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-          </svg>
-        </button>
-        {/* Undo — remove last waypoint */}
         <button style={mapOverlayBtn} onClick={() => {
           const wps = store.getOrderedWaypoints()
           if (wps.length > 0) store.removeWaypoint(wps[wps.length - 1].id)
