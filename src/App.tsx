@@ -42,9 +42,9 @@ const AppRoutes = () => {
       <Route path="/events/past" element={<AppLayout><PastEventsPage /></AppLayout>} />
       <Route path="/events/past/:id" element={<AppLayout><PastEventDetailPage /></AppLayout>} />
 
-      {/* Authenticated but full-screen — AppLayout with no header */}
-      <Route path="/route-builder" element={<AppLayout hideHeader><RouteBuilderPage /></AppLayout>} />
-      <Route path="/events/:id/host" element={<AppLayout hideHeader><EventHostPage /></AppLayout>} />
+      {/* Authenticated but full-screen — no tab bar */}
+      <Route path="/route-builder" element={<AppLayout hideTabBar><RouteBuilderPage /></AppLayout>} />
+      <Route path="/events/:id/host" element={<AppLayout hideTabBar><EventHostPage /></AppLayout>} />
     </Routes>
   )
 }

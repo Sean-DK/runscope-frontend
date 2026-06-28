@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { EventCodeDisplay } from './EventCodeDisplay'
-import { EventStatusBadge } from './EventStatusBadge'
 import { CancelEventModal } from './CancelEventModal'
 import { useEventHost } from '../hooks/useEventHost'
 import { CancelReason } from '../types'
+import { C, F, screenPad } from '../../../shared/ds'
 
 const formatElapsed = (seconds: number): string => {
   const h = Math.floor(seconds / 3600)
@@ -18,7 +18,6 @@ export const EventHostScreen = () => {
     activeEvent,
     isEnding,
     error,
-    hasTriggeredStartLine,
     elapsedSeconds,
     endEvent,
     cancelEvent,
@@ -28,7 +27,6 @@ export const EventHostScreen = () => {
   const [displaySeconds, setDisplaySeconds] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Local elapsed timer — updates every second
   useEffect(() => {
     if (activeEvent?.status === 'Active') {
       timerRef.current = setInterval(() => {
@@ -40,9 +38,7 @@ export const EventHostScreen = () => {
         setDisplaySeconds(elapsedSeconds() ?? 0)
       }
     }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [activeEvent?.status, elapsedSeconds])
 
   const handleCancel = async (reason: CancelReason) => {
@@ -52,51 +48,62 @@ export const EventHostScreen = () => {
 
   if (!activeEvent) return null
 
-  const isActive = activeEvent.status === 'Active'
+  const isActive   = activeEvent.status === 'Active'
   const isFinished = activeEvent.status === 'Finished'
-  const isPending = activeEvent.status === 'Pending'
-  const canCancel = isPending || isActive
-  const canEnd = isFinished
+  const isPending  = activeEvent.status === 'Pending'
+  const canCancel  = isPending || isActive
 
   return (
     <div style={{
-      minHeight: '100dvh',
-      backgroundColor: '#0f172a',
-      color: '#e2e8f0',
-      display: 'flex',
-      flexDirection: 'column',
-      padding: '24px 16px',
-      gap: '24px',
-      boxSizing: 'border-box',
+      minHeight:      '100dvh',
+      backgroundColor: C.base,
+      color:           C.textPrimary,
+      display:         'flex',
+      flexDirection:   'column',
+      alignItems:      'center',
+      padding:         `28px ${screenPad}px 32px`,
+      boxSizing:       'border-box',
+      gap:             20,
     }}>
+      {/* LIVE badge */}
+      <span style={{
+        display:       'inline-flex',
+        alignItems:    'center',
+        gap:           6,
+        padding:       '6px 14px',
+        borderRadius:  100,
+        background:    'rgba(200,249,78,0.13)',
+        fontFamily:    F.ui,
+        fontSize:      12,
+        fontWeight:    700,
+        color:         C.volt,
+        letterSpacing: '.04em',
+      }}>
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.volt, animation: 'rsBlink 1.2s infinite' }} />
+        {isFinished ? 'FINISHED' : isActive ? 'LIVE' : 'PENDING'}
+      </span>
 
       {/* Route name */}
-      <div>
-        <p style={{ margin: 0, fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          {activeEvent.route.name}
-        </p>
-      </div>
+      <p style={{ fontFamily: F.ui, fontSize: 14, color: C.textSecondary, margin: 0, textAlign: 'center' }}>
+        {activeEvent.route.name}
+      </p>
 
-      {/* Status badge */}
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <EventStatusBadge status={activeEvent.status} />
-      </div>
-
-      {/* Elapsed time — only show once started */}
+      {/* Big elapsed timer */}
       {(isActive || isFinished) && (
         <div style={{ textAlign: 'center' }}>
           <div style={{
-            fontSize: 64,
-            fontWeight: 800,
-            fontFamily: 'monospace',
-            letterSpacing: '0.05em',
-            color: isFinished ? '#60a5fa' : '#e2e8f0',
-            lineHeight: 1,
+            fontFamily:           F.display,
+            fontSize:             68,
+            fontWeight:           700,
+            fontVariantNumeric:   'tabular-nums',
+            letterSpacing:        '-.01em',
+            color:                isFinished ? C.volt : C.textPrimary,
+            lineHeight:           1,
           }}>
             {formatElapsed(displaySeconds)}
           </div>
-          <p style={{ margin: '8px 0 0', fontSize: 13, color: '#64748b' }}>
-            {isFinished ? 'Final Time' : 'Elapsed Time'}
+          <p style={{ fontFamily: F.ui, fontSize: 11, fontWeight: 700, letterSpacing: '.13em', textTransform: 'uppercase', color: C.textTertiary, margin: '10px 0 0' }}>
+            {isFinished ? 'Final time' : 'Elapsed'}
           </p>
         </div>
       )}
@@ -104,72 +111,84 @@ export const EventHostScreen = () => {
       {/* Pending hint */}
       {isPending && (
         <div style={{
-          textAlign: 'center',
-          padding: '16px',
-          backgroundColor: '#1e293b',
-          borderRadius: 8,
-          border: '1px solid #334155',
+          background:    C.surface,
+          border:        `1px solid ${C.hairline}`,
+          borderRadius:  16,
+          padding:       '18px 20px',
+          textAlign:     'center',
+          width:         '100%',
         }}>
-          <p style={{ margin: 0, fontSize: 14, color: '#94a3b8', lineHeight: 1.5 }}>
-            Head to the start line. Your timer will start automatically when you cross it.
+          <p style={{ fontFamily: F.ui, fontSize: 14, color: C.textSecondary, lineHeight: 1.55, margin: 0 }}>
+            Head to the start line. Your timer starts automatically when you cross it.
           </p>
         </div>
       )}
 
-      {/* Start line crossed indicator */}
-      {hasTriggeredStartLine && isActive && (
-        <div style={{
-          textAlign: 'center',
-          padding: '10px',
-          backgroundColor: '#022c22',
-          borderRadius: 8,
-          border: '1px solid #16a34a33',
-        }}>
-          <p style={{ margin: 0, fontSize: 13, color: '#34d399' }}>
-            ✓ Start line crossed — you're racing!
-          </p>
+      {/* Event code card */}
+      <div style={{ width: '100%' }}>
+        <EventCodeDisplay
+          eventCode={activeEvent.eventCode}
+          eventId={activeEvent.id}
+        />
+      </div>
+
+      {/* Stat cards — only while active */}
+      {isActive && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, width: '100%' }}>
+          <MiniStatCard label="KM so far" value="—" />
+          <MiniStatCard label="Pace" value="—" />
         </div>
       )}
-
-      {/* Event code */}
-      <EventCodeDisplay
-        eventCode={activeEvent.eventCode}
-        eventId={activeEvent.id}
-      />
 
       {/* Error */}
       {error && (
-        <p style={{
-          margin: 0,
-          padding: '10px 12px',
-          backgroundColor: '#450a0a',
-          border: '1px solid #991b1b',
-          borderRadius: 6,
-          fontSize: 13,
-          color: '#fca5a5',
-        }}>
+        <p style={{ fontFamily: F.ui, fontSize: 13, color: C.red, textAlign: 'center', margin: 0 }}>
           {error}
         </p>
       )}
 
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
+
       {/* Actions */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 'auto' }}>
-        {canEnd && (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+        {isFinished && (
           <button
             onClick={endEvent}
             disabled={isEnding}
             style={{
-              padding: '14px',
-              borderRadius: 8,
-              border: 'none',
-              backgroundColor: isEnding ? '#1e3a5f' : '#3b82f6',
-              color: isEnding ? '#475569' : 'white',
-              fontWeight: 700,
-              fontSize: 16,
-              cursor: isEnding ? 'not-allowed' : 'pointer',
+              padding:      '15px',
+              borderRadius: 16,
+              border:       'none',
+              background:   isEnding ? C.elevated : C.red,
+              color:        isEnding ? C.textTertiary : '#fff',
+              fontFamily:   F.ui,
+              fontSize:     15,
+              fontWeight:   700,
+              cursor:       isEnding ? 'not-allowed' : 'pointer',
+              width:        '100%',
             }}
           >
-            {isEnding ? 'Ending...' : 'End Event'}
+            {isEnding ? 'Saving...' : 'End race'}
+          </button>
+        )}
+
+        {isActive && (
+          <button
+            style={{
+              padding:      '14px',
+              borderRadius: 16,
+              border:       `1.5px solid ${C.amber}`,
+              background:   'rgba(255,182,39,.08)',
+              color:        C.amber,
+              fontFamily:   F.ui,
+              fontSize:     15,
+              fontWeight:   700,
+              cursor:       'pointer',
+              width:        '100%',
+            }}
+          >
+            Pause
           </button>
         )}
 
@@ -178,22 +197,22 @@ export const EventHostScreen = () => {
             onClick={() => setShowCancelModal(true)}
             disabled={isEnding}
             style={{
-              padding: '12px',
-              borderRadius: 8,
-              border: '1px solid #991b1b',
-              backgroundColor: 'transparent',
-              color: '#ef4444',
-              fontWeight: 600,
-              fontSize: 15,
-              cursor: isEnding ? 'not-allowed' : 'pointer',
+              background:   'none',
+              border:       'none',
+              color:        C.textTertiary,
+              fontFamily:   F.ui,
+              fontSize:     13,
+              fontWeight:   600,
+              cursor:       isEnding ? 'not-allowed' : 'pointer',
+              padding:      '8px',
+              textDecoration: 'underline',
             }}
           >
-            Cancel Event
+            Cancel event
           </button>
         )}
       </div>
 
-      {/* Cancel modal */}
       {showCancelModal && (
         <CancelEventModal
           onConfirm={handleCancel}
@@ -204,3 +223,19 @@ export const EventHostScreen = () => {
     </div>
   )
 }
+
+const MiniStatCard = ({ label, value }: { label: string; value: string }) => (
+  <div style={{
+    background:    C.surface,
+    border:        `1px solid ${C.hairline}`,
+    borderRadius:  14,
+    padding:       '14px 16px',
+  }}>
+    <p style={{ fontFamily: F.ui, fontSize: 11, fontWeight: 700, letterSpacing: '.13em', textTransform: 'uppercase', color: C.textTertiary, margin: '0 0 6px' }}>
+      {label}
+    </p>
+    <p style={{ fontFamily: F.display, fontSize: 24, fontWeight: 700, color: C.textPrimary, margin: 0, letterSpacing: '-.01em' }}>
+      {value}
+    </p>
+  </div>
+)

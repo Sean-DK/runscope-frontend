@@ -1,11 +1,13 @@
 import { useRef, useState } from 'react'
+import { C, F } from '../../../shared/ds'
 
 interface EventCodeDisplayProps {
   eventCode: string
   eventId: string
+  spectatorCount?: number
 }
 
-export const EventCodeDisplay = ({ eventCode, eventId }: EventCodeDisplayProps) => {
+export const EventCodeDisplay = ({ eventCode, eventId, spectatorCount = 0 }: EventCodeDisplayProps) => {
   const [copied, setCopied] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -29,43 +31,42 @@ export const EventCodeDisplay = ({ eventCode, eventId }: EventCodeDisplayProps) 
 
   return (
     <div style={{
-      display: 'flex',
+      background:    C.surface,
+      border:        `1px solid ${C.hairline}`,
+      borderRadius:  18,
+      padding:       '20px 22px',
+      display:       'flex',
       flexDirection: 'column',
-      alignItems: 'center',
-      gap: 12,
-      padding: '20px',
-      backgroundColor: '#0f172a',
-      borderRadius: 12,
-      border: '1px solid #1e293b',
+      alignItems:    'center',
+      gap:           6,
     }}>
-      <p style={{ margin: 0, fontSize: 12, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-        Event Code
+      <p style={{ fontFamily: F.ui, fontSize: 11, fontWeight: 700, letterSpacing: '.13em', textTransform: 'uppercase', color: C.textTertiary, margin: 0 }}>
+        Event code
       </p>
-      <div style={{
-        fontSize: 40,
-        fontWeight: 800,
-        letterSpacing: '0.2em',
-        color: '#e2e8f0',
-        fontFamily: 'monospace',
-      }}>
+      <div style={{ fontFamily: F.mono, fontSize: 40, fontWeight: 700, letterSpacing: '.22em', color: C.volt, margin: '4px 0' }}>
         {eventCode}
       </div>
+      <p style={{ fontFamily: F.ui, fontSize: 12, color: C.textSecondary, margin: 0 }}>
+        {spectatorCount} {spectatorCount === 1 ? 'spectator' : 'spectators'} watching
+      </p>
+
       <button
         onClick={handleCopy}
         style={{
-          padding: '8px 16px',
-          borderRadius: 6,
-          border: `1px solid ${copied ? '#22c55e' : '#334155'}`,
-          backgroundColor: copied ? '#052e16' : 'transparent',
-          color: copied ? '#86efac' : '#94a3b8',
-          fontWeight: 600,
-          fontSize: 13,
-          cursor: 'pointer',
-          transition: 'all 0.15s ease',
-          width: '100%',
+          marginTop:    8,
+          padding:      '9px 18px',
+          borderRadius: 100,
+          border:       `1px solid ${copied ? C.volt : C.hairline}`,
+          background:   copied ? 'rgba(200,249,78,0.1)' : C.elevated,
+          color:        copied ? C.volt : C.textSecondary,
+          fontFamily:   F.ui,
+          fontSize:     13,
+          fontWeight:   600,
+          cursor:       'pointer',
+          transition:   'all .15s',
         }}
       >
-        {copied ? '✓ Spectator Link Copied!' : 'Copy Spectator Link'}
+        {copied ? '✓ Link copied!' : 'Share link'}
       </button>
     </div>
   )

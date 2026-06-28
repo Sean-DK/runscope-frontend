@@ -1,241 +1,148 @@
 import { useNavigate } from 'react-router-dom'
 import { RaceEvent, CANCEL_REASONS } from '../types'
-import { EventStatusBadge } from './EventStatusBadge'
+import { C, F, screenPad } from '../../../shared/ds'
 
-const formatDate = (iso: string): string =>
-  new Date(iso).toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
+const fmtDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 
-const formatTime = (iso: string): string =>
-  new Date(iso).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
+const fmtTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
 
-const formatDuration = (startedAt: string, finishedAt: string): string => {
-  const seconds = Math.floor(
-    (new Date(finishedAt).getTime() - new Date(startedAt).getTime()) / 1000
-  )
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = seconds % 60
+const fmtDuration = (a: string, b: string): string => {
+  const s   = Math.floor((new Date(b).getTime() - new Date(a).getTime()) / 1000)
+  const h   = Math.floor(s / 3600)
+  const m   = Math.floor((s % 3600) / 60)
+  const sec = s % 60
   const pad = (n: number) => String(n).padStart(2, '0')
-  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`
+  return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`
 }
 
-const formatPace = (secondsPerMile: number): string => {
-  const m = Math.floor(secondsPerMile / 60)
-  const s = Math.round(secondsPerMile % 60)
-  return `${m}:${String(s).padStart(2, '0')} /mi`
+const fmtPace = (spm: number): string => {
+  const spu = spm / (1609.344 / 1000)
+  const m = Math.floor(spu / 60)
+  const s = Math.round(spu % 60)
+  return `${m}:${String(s).padStart(2, '0')} /km`
 }
 
-const formatDistance = (meters: number): string => {
-  const miles = meters / 1609.344
-  return `${miles.toFixed(2)} mi`
-}
+interface Props { event: RaceEvent }
 
-interface PastEventDetailProps {
-  event: RaceEvent
-}
-
-export const PastEventDetail = ({ event }: PastEventDetailProps) => {
-  const navigate = useNavigate()
-
-  const cancelLabel = event.cancelReason
+export const PastEventDetail = ({ event }: Props) => {
+  const navigate  = useNavigate()
+  const isFinished = event.status === 'Finished'
+  const isCancelled = event.status === 'Cancelled'
+  const cancelLabel = isCancelled && event.cancelReason
     ? CANCEL_REASONS.find((r) => r.value === event.cancelReason)?.label
     : null
 
-  const duration =
-    event.startedAt && event.finishedAt
-      ? formatDuration(event.startedAt, event.finishedAt)
-      : null
-
-  const avgPace = event.lastLocation?.averagePaceSecondsPerMile ?? null
-  const distanceCovered = event.lastLocation?.distanceFromStart ?? null
+  const duration   = event.startedAt && event.finishedAt ? fmtDuration(event.startedAt, event.finishedAt) : null
+  const avgPace    = event.lastLocation?.averagePaceSecondsPerMile ?? null
+  const distCovered = event.lastLocation?.distanceFromStart ?? null
+  const distKm     = event.route.totalDistance ? `${(event.route.totalDistance / 1000).toFixed(1)} km` : '—'
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100%',
-      backgroundColor: '#1e1e2e',
-      color: '#e2e8f0',
-    }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', backgroundColor: C.base }}>
 
-      {/* Header */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        padding: '14px 16px',
-        borderBottom: '1px solid #1e293b',
-        flexShrink: 0,
-      }}>
+      {/* Back row */}
+      <div style={{ padding: `16px ${screenPad}px 0`, flexShrink: 0 }}>
         <button
           onClick={() => navigate('/events/past')}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#94a3b8',
-            fontSize: 22,
-            cursor: 'pointer',
-            lineHeight: 1,
-            padding: 0,
-            flexShrink: 0,
-          }}
+          style={{ background: 'none', border: 'none', color: C.textSecondary, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: F.ui, fontSize: 14, padding: '4px 0' }}
         >
-          ‹
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.textSecondary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          Events
         </button>
-        <div style={{ flex: 1 }}>
-          <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
-            {event.route.name}
-          </h1>
-          <p style={{ margin: '2px 0 0', fontSize: 12, color: '#64748b' }}>
-            {formatDate(event.createdAt)}
-          </p>
-        </div>
-        <EventStatusBadge status={event.status} />
       </div>
 
-      {/* Cancel reason */}
-      {event.status === 'Cancelled' && cancelLabel && (
-        <div style={{
-          margin: '12px 16px 0',
-          padding: '10px 14px',
-          backgroundColor: '#450a0a',
-          border: '1px solid #991b1b',
-          borderRadius: 8,
-        }}>
-          <p style={{ margin: 0, fontSize: 13, color: '#fca5a5' }}>
-            Cancelled — {cancelLabel}
+      {/* Route name + date */}
+      <div style={{ padding: `14px ${screenPad}px 0` }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <h1 style={{ fontFamily: F.display, fontSize: 22, fontWeight: 700, letterSpacing: '-.02em', color: C.textPrimary, margin: 0, flex: 1 }}>
+            {event.route.name}
+          </h1>
+          {isFinished && (
+            <span style={{ fontFamily: F.ui, fontSize: 10, fontWeight: 700, color: C.volt, background: 'rgba(200,249,78,0.12)', padding: '3px 7px', borderRadius: 6, letterSpacing: '.06em', flexShrink: 0, marginTop: 4 }}>
+              PR
+            </span>
+          )}
+        </div>
+        <p style={{ fontFamily: F.ui, fontSize: 13, color: C.textSecondary, margin: '6px 0 0' }}>
+          {fmtDate(event.createdAt)}{event.lastLocation ? ` · ${distKm}` : ''}
+        </p>
+      </div>
+
+      {/* Cancelled notice */}
+      {isCancelled && (
+        <div style={{ margin: `12px ${screenPad}px 0`, padding: '12px 16px', background: 'rgba(255,82,71,.1)', border: `1px solid rgba(255,82,71,.25)`, borderRadius: 12 }}>
+          <p style={{ fontFamily: F.ui, fontSize: 13, color: C.red, margin: 0 }}>
+            Cancelled{cancelLabel ? ` — ${cancelLabel}` : ''}
           </p>
         </div>
       )}
 
-      {/* Stats grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: 1,
-        backgroundColor: '#1e293b',
-        border: '1px solid #1e293b',
-        margin: '12px 16px',
-        borderRadius: 10,
-        overflow: 'hidden',
-      }}>
-        <StatCell
-          label="Final Time"
-          value={duration ?? '--'}
-        />
-        <StatCell
-          label="Avg Pace"
-          value={avgPace !== null ? formatPace(avgPace) : '--'}
-        />
-        <StatCell
-          label="Distance Covered"
-          value={distanceCovered !== null ? formatDistance(distanceCovered) : '--'}
-        />
-        <StatCell
-          label="Total Distance"
-          value={formatDistance(event.route.totalDistance)}
-        />
+      {/* Finish time card */}
+      {duration && (
+        <div style={{ margin: `16px ${screenPad}px 0`, padding: '20px 22px', background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: 18 }}>
+          <p style={{ fontFamily: F.ui, fontSize: 11, fontWeight: 700, letterSpacing: '.13em', textTransform: 'uppercase', color: C.textTertiary, margin: '0 0 6px' }}>
+            Finish time
+          </p>
+          <div style={{ fontFamily: F.display, fontSize: 50, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: isFinished ? C.volt : C.textPrimary, letterSpacing: '-.02em', lineHeight: 1 }}>
+            {duration}
+          </div>
+        </div>
+      )}
+
+      {/* 3-cell stat strip */}
+      <div style={{ display: 'flex', margin: `12px ${screenPad}px 0`, background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: 16, overflow: 'hidden' }}>
+        <StatCell label="Distance" value={distCovered ? `${(distCovered / 1000).toFixed(1)} km` : '—'} />
+        <div style={{ width: 1, background: C.hairline }} />
+        <StatCell label="Avg pace" value={avgPace !== null ? fmtPace(avgPace) : '—'} />
+        <div style={{ width: 1, background: C.hairline }} />
+        <StatCell label="Gain" value="—" />
       </div>
 
       {/* Timeline */}
-      <div style={{
-        margin: '0 16px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 0,
-        backgroundColor: '#0f172a',
-        borderRadius: 10,
-        border: '1px solid #1e293b',
-        overflow: 'hidden',
-      }}>
-        <TimelineRow
-          label="Event Created"
-          value={formatTime(event.createdAt)}
-          isLast={false}
-        />
-        {event.startedAt && (
-          <TimelineRow
-            label="Crossed Start Line"
-            value={formatTime(event.startedAt)}
-            isLast={false}
-          />
-        )}
-        {event.finishedAt && (
-          <TimelineRow
-            label="Crossed Finish Line"
-            value={formatTime(event.finishedAt)}
-            isLast={false}
-          />
-        )}
-        {event.endedAt && (
-          <TimelineRow
-            label="Event Ended"
-            value={formatTime(event.endedAt)}
-            isLast
-          />
-        )}
+      <div style={{ margin: `16px ${screenPad}px 0`, background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: 16, overflow: 'hidden' }}>
+        <p style={{ fontFamily: F.ui, fontSize: 11, fontWeight: 700, letterSpacing: '.13em', textTransform: 'uppercase', color: C.textTertiary, margin: 0, padding: '14px 16px 8px' }}>
+          Timeline
+        </p>
+        <TimeRow label="Created" value={fmtTime(event.createdAt)} />
+        {event.startedAt && <TimeRow label="Start line" value={fmtTime(event.startedAt)} />}
+        {event.finishedAt && <TimeRow label="Finish line" value={fmtTime(event.finishedAt)} last />}
+        {event.endedAt && !event.finishedAt && <TimeRow label="Ended" value={fmtTime(event.endedAt)} last />}
       </div>
+
+      {/* Share recap */}
+      {isFinished && (
+        <div style={{ padding: `16px ${screenPad}px 28px`, marginTop: 'auto' }}>
+          <button style={{
+            width: '100%', padding: '14px', borderRadius: 16, border: 'none',
+            background: C.volt, color: C.base, fontFamily: F.ui, fontSize: 15, fontWeight: 700, cursor: 'pointer',
+          }}>
+            Share recap
+          </button>
+        </div>
+      )}
     </div>
   )
 }
 
 const StatCell = ({ label, value }: { label: string; value: string }) => (
-  <div style={{
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '14px 8px',
-    backgroundColor: '#0f172a',
-    gap: 4,
-    textAlign: 'center',
-  }}>
-    <span style={{
-      fontSize: value === '--' ? 20 : 17,
-      fontWeight: 700,
-      color: value === '--' ? '#334155' : '#e2e8f0',
-      fontFamily: value === '--' ? 'inherit' : 'monospace',
-    }}>
-      {value}
-    </span>
-    <span style={{
-      fontSize: 10,
-      color: '#64748b',
-      textTransform: 'uppercase',
-      letterSpacing: '0.06em',
-    }}>
+  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '14px 8px', gap: 4 }}>
+    <span style={{ fontFamily: F.ui, fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: C.textTertiary }}>
       {label}
+    </span>
+    <span style={{ fontFamily: F.display, fontSize: 16, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: value === '—' ? C.textTertiary : C.textPrimary }}>
+      {value}
     </span>
   </div>
 )
 
-const TimelineRow = ({
-  label,
-  value,
-  isLast,
-}: {
-  label: string
-  value: string
-  isLast: boolean
-}) => (
-  <div style={{
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '12px 14px',
-    borderBottom: isLast ? 'none' : '1px solid #1e293b',
-  }}>
-    <span style={{ fontSize: 13, color: '#94a3b8' }}>{label}</span>
-    <span style={{ fontSize: 13, fontWeight: 600, fontFamily: 'monospace', color: '#e2e8f0' }}>
+const TimeRow = ({ label, value, last }: { label: string; value: string; last?: boolean }) => (
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '11px 16px', borderTop: `1px solid ${C.hairline}` }}>
+    <span style={{ fontFamily: F.ui, fontSize: 13, color: C.textSecondary }}>{label}</span>
+    <span style={{ fontFamily: F.mono, fontSize: 13, fontWeight: 700, color: last ? C.textPrimary : C.textSecondary }}>
       {value}
     </span>
   </div>

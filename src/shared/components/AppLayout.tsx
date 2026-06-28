@@ -1,23 +1,24 @@
 import { AuthGuard } from '../../features/auth/components/AuthGuard'
-import { AppHeader } from './AppHeader'
+import { TabBar } from './TabBar'
+import { C } from '../ds'
 
 interface AppLayoutProps {
   children: React.ReactNode
-  hideHeader?: boolean
+  hideTabBar?: boolean
 }
 
-export const AppLayout = ({ children, hideHeader = false }: AppLayoutProps) => (
+export const AppLayout = ({ children, hideTabBar = false }: AppLayoutProps) => (
   <AuthGuard>
     <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100dvh',
-      backgroundColor: '#0f172a',
+      display:         'flex',
+      flexDirection:   'column',
+      minHeight:       '100dvh',
+      backgroundColor: C.base,
     }}>
-      {!hideHeader && <AppHeader />}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {children}
       </div>
+      {!hideTabBar && <TabBar />}
     </div>
   </AuthGuard>
 )

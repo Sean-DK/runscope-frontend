@@ -1,103 +1,81 @@
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../features/auth/hooks/useAuth'
-import { useAuthStore } from '../../features/auth/store/authStore'
-import { authApi } from '../../features/auth/api'
-import { UnitPreference } from '../../features/auth/types'
+import { C, F } from '../ds'
+
+export const RunScopeLogo = () => (
+  <div
+    style={{
+      position:  'relative',
+      width:     30,
+      height:    30,
+      borderRadius: '50%',
+      border:    `2.5px solid ${C.volt}`,
+      display:   'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    }}
+  >
+    <div style={{ width: 7, height: 7, borderRadius: '50%', background: C.volt }} />
+    <div style={{
+      position:  'absolute',
+      top:       -5,
+      left:      '50%',
+      transform: 'translateX(-50%)',
+      width:     2,
+      height:    5,
+      background: C.volt,
+    }} />
+    <div style={{
+      position:  'absolute',
+      bottom:    -5,
+      left:      '50%',
+      transform: 'translateX(-50%)',
+      width:     2,
+      height:    5,
+      background: C.volt,
+    }} />
+  </div>
+)
 
 export const AppHeader = () => {
   const navigate = useNavigate()
-  const { user, signOut } = useAuth()
-  const setUser = useAuthStore((state) => state.setUser)
-
-  const handleToggleUnits = async () => {
-    if (!user) return
-    const newPreference: UnitPreference =
-      user.unitPreference === 'Miles' ? 'Kilometers' : 'Miles'
-
-    // Optimistically update the store immediately for instant UI response
-    setUser({ ...user, unitPreference: newPreference })
-
-    try {
-      await authApi.updatePreferences(newPreference)
-    } catch {
-      // Revert on failure
-      setUser({ ...user, unitPreference: user.unitPreference })
-    }
-  }
 
   return (
     <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '12px 16px',
-      backgroundColor: '#1e1e2e',
-      borderBottom: '1px solid #1e293b',
-      flexShrink: 0,
+      display:         'flex',
+      alignItems:      'center',
+      justifyContent:  'space-between',
+      padding:         '16px 22px',
+      flexShrink:      0,
     }}>
-      {/* Logo */}
-      <span
+      <div
         onClick={() => navigate('/')}
+        style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+      >
+        <RunScopeLogo />
+        <span style={{ fontFamily: F.display, fontWeight: 700, fontSize: 20, letterSpacing: '-.02em', color: C.textPrimary }}>
+          RunScope
+        </span>
+      </div>
+
+      <button
         style={{
-          fontSize: 18,
-          fontWeight: 800,
-          letterSpacing: '-0.02em',
-          color: '#e2e8f0',
-          cursor: 'pointer',
+          width:           32,
+          height:          32,
+          borderRadius:    '50%',
+          border:          `1px solid ${C.hairline}`,
+          background:      C.elevated,
+          color:           C.textSecondary,
+          fontSize:        15,
+          fontWeight:      700,
+          cursor:          'pointer',
+          display:         'flex',
+          alignItems:      'center',
+          justifyContent:  'center',
         }}
       >
-        RunScope
-      </span>
-
-      {/* Right side controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-
-        {/* Units toggle */}
-        {user && (
-          <button
-            onClick={handleToggleUnits}
-            title="Toggle units"
-            style={{
-              padding: '5px 10px',
-              borderRadius: 6,
-              border: '1px solid #334155',
-              backgroundColor: 'transparent',
-              color: '#94a3b8',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'border-color 0.15s ease, color 0.15s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#3b82f6'
-              e.currentTarget.style.color = '#e2e8f0'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = '#334155'
-              e.currentTarget.style.color = '#94a3b8'
-            }}
-          >
-            {user.unitPreference === 'Miles' ? 'mi' : 'km'}
-          </button>
-        )}
-
-        {/* Sign out */}
-        <button
-          onClick={signOut}
-          style={{
-            padding: '5px 10px',
-            borderRadius: 6,
-            border: '1px solid #334155',
-            backgroundColor: 'transparent',
-            color: '#64748b',
-            fontSize: 12,
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          Sign Out
-        </button>
-      </div>
+        ?
+      </button>
     </div>
   )
 }

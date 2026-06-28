@@ -2,24 +2,42 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { eventsApi } from '../api'
 import { RaceEvent } from '../types'
-import { EventStatusBadge } from './EventStatusBadge'
+import { C, F, screenPad, btnVolt } from '../../../shared/ds'
 
-const formatDate = (iso: string): string =>
-  new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-
-const formatDuration = (startedAt: string, finishedAt: string): string => {
-  const seconds = Math.floor(
-    (new Date(finishedAt).getTime() - new Date(startedAt).getTime()) / 1000
-  )
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = seconds % 60
+const fmtTime = (startedAt: string, finishedAt: string): string => {
+  const s = Math.floor((new Date(finishedAt).getTime() - new Date(startedAt).getTime()) / 1000)
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
   const pad = (n: number) => String(n).padStart(2, '0')
-  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`
+  return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`
+}
+
+const fmtPace = (startedAt: string, finishedAt: string, totalMeters: number): string => {
+  if (!totalMeters) return '—'
+  const s = Math.floor((new Date(finishedAt).getTime() - new Date(startedAt).getTime()) / 1000)
+  const spm = s / (totalMeters / 1000)
+  const m = Math.floor(spm / 60)
+  const sec = Math.round(spm % 60)
+  return `${m}:${String(sec).padStart(2, '0')} /km`
+}
+
+const monthKey = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+
+interface Group {
+  month: string
+  events: RaceEvent[]
+}
+
+const groupByMonth = (events: RaceEvent[]): Group[] => {
+  const map = new Map<string, RaceEvent[]>()
+  for (const e of events) {
+    const key = monthKey(e.createdAt)
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(e)
+  }
+  return Array.from(map.entries()).map(([month, evts]) => ({ month, events: evts }))
 }
 
 export const PastEventList = () => {
@@ -36,99 +54,109 @@ export const PastEventList = () => {
   if (isLoading) {
     return (
       <div style={centerStyle}>
-        <p style={{ color: '#94a3b8' }}>Loading events...</p>
+        <p style={{ fontFamily: F.ui, color: C.textSecondary }}>Loading events...</p>
       </div>
     )
   }
 
   if (events.length === 0) {
     return (
-      <div style={centerStyle}>
-        <p style={{ color: '#94a3b8' }}>No past events yet.</p>
+      <div style={{ ...centerStyle, gap: 16 }}>
+        <p style={{ fontFamily: F.ui, fontSize: 14, color: C.textSecondary }}>No past events yet.</p>
+        <button onClick={() => navigate('/routes')} style={{ ...btnVolt, width: 'auto', padding: '12px 24px' }}>
+          Start your first race
+        </button>
       </div>
     )
   }
 
+  const groups = groupByMonth(events)
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      {events.map((event, i) => (
-        <PastEventRow
-          key={event.id}
-          event={event}
-          isLast={i === events.length - 1}
-          onClick={() => navigate(`/events/past/${event.id}`)}
-          formatDate={formatDate}
-          formatDuration={formatDuration}
-        />
+    <div style={{ padding: `0 ${screenPad}px` }}>
+      {groups.map(({ month, events: evts }) => (
+        <div key={month}>
+          <p style={{ fontFamily: F.ui, fontSize: 13, fontWeight: 700, color: C.textTertiary, margin: '16px 0 8px' }}>
+            {month}
+          </p>
+          {evts.map((event, i) => (
+            <EventRow
+              key={event.id}
+              event={event}
+              isLast={i === evts.length - 1}
+              onClick={() => navigate(`/events/past/${event.id}`)}
+            />
+          ))}
+        </div>
       ))}
     </div>
   )
 }
 
-const PastEventRow = ({
-  event,
-  isLast,
-  onClick,
-  formatDate,
-  formatDuration,
-}: {
-  event: RaceEvent
-  isLast: boolean
-  onClick: () => void
-  formatDate: (iso: string) => string
-  formatDuration: (start: string, finish: string) => string
-}) => {
-  const duration =
-    event.startedAt && event.finishedAt
-      ? formatDuration(event.startedAt, event.finishedAt)
-      : null
+const EventRow = ({ event, isLast, onClick }: { event: RaceEvent; isLast: boolean; onClick: () => void }) => {
+  const hasTime = !!(event.startedAt && event.finishedAt)
+  const time    = hasTime ? fmtTime(event.startedAt!, event.finishedAt!) : null
+  const pace    = hasTime ? fmtPace(event.startedAt!, event.finishedAt!, event.route.totalDistance) : null
+  const dateStr = new Date(event.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const distKm  = event.route.totalDistance ? `${(event.route.totalDistance / 1000).toFixed(1)} km` : null
 
   return (
     <div
       onClick={onClick}
       style={{
-        display: 'flex',
-        alignItems: 'center',
+        display:       'flex',
+        alignItems:    'center',
         justifyContent: 'space-between',
-        padding: '14px 16px',
-        borderBottom: isLast ? 'none' : '1px solid #1e293b',
-        cursor: 'pointer',
-        transition: 'background-color 0.15s ease',
-        backgroundColor: 'transparent',
+        padding:       '13px 0',
+        borderBottom:  isLast ? 'none' : `1px solid ${C.hairline}`,
+        cursor:        'pointer',
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#0f172a')}
-      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>
-          {event.route.name}
-        </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <EventStatusBadge status={event.status} />
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+          <span style={{ fontFamily: F.ui, fontSize: 15, fontWeight: 600, color: C.textPrimary }}>
+            {event.route.name}
+          </span>
+          {event.status === 'Finished' && (
+            <span style={{
+              fontFamily: F.ui, fontSize: 10, fontWeight: 700,
+              color: C.volt, background: 'rgba(200,249,78,0.12)',
+              padding: '2px 6px', borderRadius: 4, letterSpacing: '.06em',
+            }}>
+              PR
+            </span>
+          )}
         </div>
-        <span style={{ fontSize: 12, color: '#64748b' }}>
-          {formatDate(event.createdAt)}
+        <span style={{ fontFamily: F.ui, fontSize: 12, color: C.textSecondary }}>
+          {dateStr}{distKm ? ` · ${distKm}` : ''}
         </span>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        {duration && (
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 14, fontFamily: 'monospace', color: '#94a3b8' }}>
-              {duration}
-            </div>
-            <div style={{ fontSize: 11, color: '#64748b' }}>final time</div>
+
+      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+        {time && (
+          <div style={{ fontFamily: F.display, fontSize: 16, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: C.textPrimary }}>
+            {time}
           </div>
         )}
-        <span style={{ color: '#475569', fontSize: 18 }}>›</span>
+        {pace && (
+          <div style={{ fontFamily: F.ui, fontSize: 11, color: C.textSecondary, marginTop: 2 }}>
+            {pace}
+          </div>
+        )}
+        {!hasTime && (
+          <span style={{ fontFamily: F.ui, fontSize: 12, color: C.textTertiary }}>
+            {event.status}
+          </span>
+        )}
       </div>
     </div>
   )
 }
 
 const centerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
+  display:        'flex',
+  flexDirection:  'column',
+  alignItems:     'center',
   justifyContent: 'center',
-  padding: '48px 24px',
+  padding:        '48px 24px',
 }

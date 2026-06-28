@@ -1,42 +1,40 @@
+import { C, F } from '../../../shared/ds'
 import { EventStatus } from '../types'
 
-const STATUS_CONFIG: Record<EventStatus, { label: string; color: string; bg: string }> = {
-  Pending:   { label: 'Waiting to Start', color: '#fbbf24', bg: '#451a03' },
-  Active:    { label: 'Active',           color: '#34d399', bg: '#022c22' },
-  Finished:  { label: 'Finished',         color: '#60a5fa', bg: '#1e3a5f' },
-  Cancelled: { label: 'Cancelled',        color: '#f87171', bg: '#450a0a' },
-  Ended:     { label: 'Ended',            color: '#94a3b8', bg: '#0f172a' },
+const STATUS: Record<EventStatus, { label: string; color: string; softBg: string }> = {
+  Pending:   { label: 'Pending',   color: C.amber, softBg: 'rgba(255,182,39,.13)' },
+  Active:    { label: 'LIVE',      color: C.volt,  softBg: 'rgba(200,249,78,.13)' },
+  Finished:  { label: 'Finished',  color: C.textSecondary, softBg: 'rgba(152,160,172,.1)' },
+  Cancelled: { label: 'Cancelled', color: C.red,   softBg: 'rgba(255,82,71,.12)'  },
+  Ended:     { label: 'Ended',     color: C.textTertiary, softBg: 'rgba(92,99,110,.1)' },
 }
 
 export const EventStatusBadge = ({ status }: { status: EventStatus }) => {
-  const config = STATUS_CONFIG[status]
+  const s = STATUS[status]
+  const isLive = status === 'Active'
   return (
-    <div style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: 6,
-      padding: '5px 12px',
-      borderRadius: 999,
-      backgroundColor: config.bg,
-      border: `1px solid ${config.color}33`,
+    <span style={{
+      display:       'inline-flex',
+      alignItems:    'center',
+      gap:           6,
+      padding:       '5px 12px',
+      borderRadius:  100,
+      background:    s.softBg,
+      fontFamily:    F.ui,
+      fontSize:      12,
+      fontWeight:    700,
+      color:         s.color,
+      letterSpacing: '.04em',
     }}>
-      <div style={{
-        width: 7,
-        height: 7,
+      <span style={{
+        width:        6,
+        height:       6,
         borderRadius: '50%',
-        backgroundColor: config.color,
-        boxShadow: status === 'Active' ? `0 0 6px ${config.color}` : 'none',
-        animation: status === 'Active' ? 'pulse 2s infinite' : 'none',
+        background:   s.color,
+        flexShrink:   0,
+        animation:    isLive ? 'rsBlink 1.2s infinite' : 'none',
       }} />
-      <span style={{ fontSize: 13, fontWeight: 600, color: config.color }}>
-        {config.label}
-      </span>
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.4; }
-        }
-      `}</style>
-    </div>
+      {s.label}
+    </span>
   )
 }

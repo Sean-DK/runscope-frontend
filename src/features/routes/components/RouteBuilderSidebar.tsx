@@ -1,241 +1,197 @@
 import { useRef } from 'react'
 import { useRouteBuilder } from '../hooks/useRouteBuilder'
 import { useNavigate } from 'react-router-dom'
+import { C, F } from '../../../shared/ds'
 
-const formatDistance = (meters: number, useMetric: boolean): string => {
-  if (useMetric) {
-    const km = meters / 1000
-    return `${km.toFixed(2)} km`
-  }
-  const miles = meters / 1609.344
-  return `${miles.toFixed(2)} mi`
-}
+const fmtDist = (m: number, metric: boolean) =>
+  metric ? `${(m / 1000).toFixed(1)} km` : `${(m / 1609.344).toFixed(1)} mi`
 
-interface RouteBuilderSidebarProps {
-  useMetric: boolean
-  onClose: () => void
-  onCancel: () => void
-}
+const estMin = (meters: number) => Math.round(meters / 1000 * 6)
 
-export const RouteBuilderSidebar = ({
-  useMetric = false,
-  onClose,
-  onCancel
-}: RouteBuilderSidebarProps) => {
+interface Props { useMetric: boolean; onClose: () => void; onCancel: () => void }
+
+export const RouteBuilderSidebar = ({ useMetric = false, onClose, onCancel }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const navigate = useNavigate()
+  const navigate     = useNavigate()
   const {
-    draftRoute,
-    orderedWaypoints,
-    isDirty,
-    isSaving,
-    error,
-    selectedWaypointId,
-    setName,
-    setSelectedWaypoint,
-    handleRemoveWaypoint,
-    handleSave,
-    handleDelete,
-    importFile,
+    draftRoute, orderedWaypoints, isDirty, isSaving, error,
+    selectedWaypointId, setName, setSelectedWaypoint,
+    handleRemoveWaypoint, handleSave, handleDelete, importFile,
   } = useRouteBuilder()
 
   if (!draftRoute) return null
 
   const isEditing = !!draftRoute.id
+  const dist      = draftRoute.totalDistance ?? 0
 
   return (
     <div style={{
-      width: 300,
-      height: '100%',
-      backgroundColor: '#1e1e2e',
-      color: '#e2e8f0',
-      display: 'flex',
-      flexDirection: 'column',
-      padding: '16px',
-      gap: '16px',
-      overflowY: 'auto',
-      boxSizing: 'border-box',
+      width:           280,
+      height:          '100%',
+      background:      'rgba(10,11,13,0.94)',
+      backdropFilter:  'blur(14px)',
+      borderRight:     `1px solid ${C.hairline}`,
+      boxShadow:       '4px 0 24px rgba(0,0,0,0.5)',
+      color:           C.textPrimary,
+      display:         'flex',
+      flexDirection:   'column',
+      overflowY:       'auto',
+      boxSizing:       'border-box',
     }}>
-
-      {/* Header with close button */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
-            {isEditing ? 'Edit Route' : 'New Route'}
-          </h2>
-          {draftRoute.totalDistance > 0 && (
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#94a3b8' }}>
-              {formatDistance(draftRoute.totalDistance, useMetric)}
-            </p>
-          )}
-        </div>
-        <button
-          onClick={onClose}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#94a3b8',
-            fontSize: 22,
-            cursor: 'pointer',
-            lineHeight: 1,
-            padding: '0 2px',
-            flexShrink: 0,
-          }}
-          title="Close panel"
-        >
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 18px 12px' }}>
+        <span style={{ fontFamily: F.ui, fontSize: 13, fontWeight: 700, color: C.textSecondary }}>
+          Building route
+        </span>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: C.textTertiary, fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: 2 }}>
           ✕
         </button>
       </div>
 
+      {/* Distance card */}
+      {dist > 0 && (
+        <div style={{ margin: '0 14px 16px', padding: '14px 16px', background: C.elevated, border: `1px solid ${C.hairline}`, borderRadius: 14 }}>
+          <div style={{ fontFamily: F.display, fontSize: 28, fontWeight: 700, letterSpacing: '-.02em', color: C.textPrimary }}>
+            {fmtDist(dist, useMetric)}
+          </div>
+          <div style={{ fontFamily: F.ui, fontSize: 12, color: C.textSecondary, marginTop: 3 }}>
+            ≈ {estMin(dist)} min · {orderedWaypoints.length} waypoints
+          </div>
+        </div>
+      )}
+
       {/* Route name */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <label style={{ fontSize: 13, color: '#94a3b8' }}>Route Name</label>
+      <div style={{ padding: '0 14px 14px' }}>
         <input
           type="text"
           value={draftRoute.name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Morning Half Marathon"
+          placeholder="Route name"
           style={{
-            padding: '8px 10px',
-            borderRadius: 6,
-            border: '1px solid #334155',
-            backgroundColor: '#0f172a',
-            color: '#e2e8f0',
-            fontSize: 14,
-            outline: 'none',
+            width:        '100%',
+            padding:      '10px 12px',
+            borderRadius: 12,
+            border:       `1px solid ${C.hairline}`,
+            background:   C.elevated,
+            color:        C.textPrimary,
+            fontFamily:   F.ui,
+            fontSize:     14,
+            fontWeight:   600,
+            outline:      'none',
+            boxSizing:    'border-box',
           }}
         />
-      </div>
-
-      {/* GPX/KML import */}
-      <div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".gpx,.kml"
-          style={{ display: 'none' }}
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) importFile(file)
-            e.target.value = ''
-          }}
-        />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          style={secondaryButtonStyle}
-        >
-          Import GPX / KML
-        </button>
       </div>
 
       {/* Waypoint list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-        <label style={{ fontSize: 13, color: '#94a3b8' }}>
-          Waypoints ({orderedWaypoints.length})
-        </label>
+      <div style={{ flex: 1, padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+        <p style={{ fontFamily: F.ui, fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: C.textTertiary, margin: '0 0 10px' }}>
+          Waypoints
+        </p>
 
         {orderedWaypoints.length === 0 && (
-          <p style={{ fontSize: 13, color: '#475569', margin: 0 }}>
-            Click the map to add waypoints
+          <p style={{ fontFamily: F.ui, fontSize: 13, color: C.textTertiary, margin: 0 }}>
+            Tap the map to add waypoints
           </p>
         )}
 
         {orderedWaypoints.map((wp, i) => {
-          const isStart = i === 0
-          const isFinish = i === orderedWaypoints.length - 1
-          const isSelected = selectedWaypointId === wp.id
-          const label = isStart ? 'Start' : isFinish ? 'Finish' : `Waypoint ${i + 1}`
+          const isStart  = i === 0
+          const isFinish = i === orderedWaypoints.length - 1 && orderedWaypoints.length > 1
+          const isSel    = selectedWaypointId === wp.id
+          const label    = isStart ? 'Start' : isFinish ? 'Finish' : `Point ${i + 1}`
 
           return (
-            <div
-              key={wp.id}
-              onClick={() => setSelectedWaypoint(isSelected ? null : wp.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '8px 10px',
-                borderRadius: 6,
-                backgroundColor: isSelected ? '#1e3a5f' : '#0f172a',
-                border: `1px solid ${isSelected ? '#3b82f6' : '#1e293b'}`,
-                cursor: 'pointer',
-                transition: 'background-color 0.15s ease',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div key={wp.id} style={{ display: 'flex', gap: 10, alignItems: 'stretch', marginBottom: 2 }}>
+              {/* Connector column */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 18, flexShrink: 0 }}>
                 <div style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: '50%',
-                  backgroundColor: isStart ? '#22c55e' : isFinish ? '#ef4444' : '#3b82f6',
-                  flexShrink: 0,
+                  width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
+                  background: isStart ? C.textPrimary : isFinish ? C.textPrimary : C.elevated,
+                  border: `2px solid ${isStart || isFinish ? C.textPrimary : C.volt}`,
+                  marginTop: 8,
                 }} />
-                <span style={{ fontSize: 13 }}>{label}</span>
+                {i < orderedWaypoints.length - 1 && (
+                  <div style={{ flex: 1, width: 1.5, background: C.hairline, margin: '3px 0' }} />
+                )}
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleRemoveWaypoint(wp.id)
-                }}
+              {/* Label row */}
+              <div
+                onClick={() => setSelectedWaypoint(isSel ? null : wp.id)}
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#64748b',
-                  cursor: 'pointer',
-                  fontSize: 16,
-                  lineHeight: 1,
-                  padding: '0 2px',
+                  flex:         1,
+                  display:      'flex',
+                  alignItems:   'center',
+                  justifyContent: 'space-between',
+                  padding:      '7px 10px',
+                  borderRadius: 10,
+                  background:   isSel ? C.elevated : 'transparent',
+                  border:       `1px solid ${isSel ? C.volt : 'transparent'}`,
+                  cursor:       'pointer',
+                  minHeight:    36,
                 }}
-                title="Remove waypoint"
               >
-                ×
-              </button>
+                <span style={{ fontFamily: F.ui, fontSize: 13, fontWeight: 600, color: isSel ? C.volt : C.textPrimary }}>
+                  {label}
+                </span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleRemoveWaypoint(wp.id) }}
+                  style={{ background: 'none', border: 'none', color: C.textTertiary, cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '0 2px' }}
+                >
+                  ×
+                </button>
+              </div>
             </div>
           )
         })}
       </div>
 
+      {/* Import */}
+      <div style={{ padding: '12px 14px 0' }}>
+        <input ref={fileInputRef} type="file" accept=".gpx,.kml" style={{ display: 'none' }}
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = '' }}
+        />
+        <button onClick={() => fileInputRef.current?.click()} style={secondaryBtn}>
+          Import GPX / KML
+        </button>
+      </div>
+
       {/* Error */}
       {error && (
-        <p style={{
-          margin: 0,
-          padding: '8px 10px',
-          backgroundColor: '#450a0a',
-          border: '1px solid #991b1b',
-          borderRadius: 6,
-          fontSize: 13,
-          color: '#fca5a5',
-        }}>
-          {error}
-        </p>
+        <div style={{ margin: '10px 14px 0', padding: '10px 12px', background: 'rgba(255,82,71,.1)', border: `1px solid rgba(255,82,71,.25)`, borderRadius: 10 }}>
+          <p style={{ fontFamily: F.ui, fontSize: 13, color: C.red, margin: 0 }}>{error}</p>
+        </div>
       )}
 
       {/* Actions */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <button
-          onClick={async () => { 
-            const success = await handleSave()
-            if (success) navigate('/routes')
-          }}
+          onClick={async () => { const ok = await handleSave(); if (ok) navigate('/routes') }}
           disabled={isSaving || !isDirty}
-          style={primaryButtonStyle(isSaving || !isDirty)}
+          style={{
+            padding:      '14px',
+            borderRadius: 14,
+            border:       'none',
+            background:   isSaving || !isDirty ? C.elevated : C.volt,
+            color:        isSaving || !isDirty ? C.textTertiary : C.base,
+            fontFamily:   F.ui,
+            fontSize:     14,
+            fontWeight:   700,
+            cursor:       isSaving || !isDirty ? 'not-allowed' : 'pointer',
+          }}
         >
-          {isSaving ? 'Saving...' : 'Save Route'}
+          {isSaving ? 'Saving...' : 'Save route'}
         </button>
-        <button
-          onClick={onCancel}
-          disabled={isSaving}
-          style={secondaryButtonStyle}
-        >
+        <button onClick={onCancel} disabled={isSaving} style={secondaryBtn}>
           Cancel
         </button>
         {isEditing && (
           <button
             onClick={async () => { await handleDelete(); onClose() }}
             disabled={isSaving}
-            style={dangerButtonStyle(isSaving)}
+            style={{ ...secondaryBtn, borderColor: 'rgba(255,82,71,.3)', color: C.red }}
           >
-            Delete Route
+            Delete route
           </button>
         )}
       </div>
@@ -243,38 +199,15 @@ export const RouteBuilderSidebar = ({
   )
 }
 
-// --- Styles ---
-
-const primaryButtonStyle = (disabled: boolean): React.CSSProperties => ({
-  padding: '10px',
-  borderRadius: 6,
-  border: 'none',
-  backgroundColor: disabled ? '#1e3a5f' : '#3b82f6',
-  color: disabled ? '#475569' : 'white',
-  fontWeight: 600,
-  fontSize: 14,
-  cursor: disabled ? 'not-allowed' : 'pointer',
-  transition: 'background-color 0.15s ease',
-})
-
-const secondaryButtonStyle: React.CSSProperties = {
-  padding: '10px',
-  borderRadius: 6,
-  border: '1px solid #334155',
-  backgroundColor: 'transparent',
-  color: '#94a3b8',
-  fontWeight: 600,
-  fontSize: 14,
-  cursor: 'pointer',
+const secondaryBtn: React.CSSProperties = {
+  padding:      '11px',
+  borderRadius: 12,
+  border:       `1px solid ${C.hairline}`,
+  background:   C.elevated,
+  color:        C.textSecondary,
+  fontFamily:   F.ui,
+  fontSize:     13,
+  fontWeight:   600,
+  cursor:       'pointer',
+  width:        '100%',
 }
-
-const dangerButtonStyle = (disabled: boolean): React.CSSProperties => ({
-  padding: '10px',
-  borderRadius: 6,
-  border: '1px solid #991b1b',
-  backgroundColor: 'transparent',
-  color: disabled ? '#475569' : '#ef4444',
-  fontWeight: 600,
-  fontSize: 14,
-  cursor: disabled ? 'not-allowed' : 'pointer',
-})
