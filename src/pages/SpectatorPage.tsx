@@ -21,7 +21,17 @@ export const SpectatorPage = () => {
     if (!id) { navigate('/join'); return }
     if (!searchParams.get('units')) { navigate(`/events/${id}/units`); return }
     spectatorApi.getEventById(id)
-      .then((e) => { if (e.status === 'Ended') { setError('This event has ended.'); return }; setEvent(e) })
+      .then((e) => {
+        if (e.status === 'Ended') {
+          setError('This event has ended.')
+          return
+        }
+        setEvent(e)
+
+        if (e.lastLocation) {
+          applyLocationUpdate(e.lastLocation)
+        }
+      })
       .catch(() => {
         if (import.meta.env.DEV) {
           setConnectionStatus('Connected')

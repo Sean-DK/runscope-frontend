@@ -1,7 +1,7 @@
 import { useSpectatorStore } from '../store/spectatorStore'
 import { C, F, screenPad } from '../../../shared/ds'
 import { CANCEL_REASONS } from '../../events/types'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const MILE = 1609.344
 const KM   = 1000
@@ -35,6 +35,14 @@ const fmtETA = (ts: string | null): string => {
   return new Date(ts).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
 }
 
+// Calculate elapsed seconds from startedAt timestamp
+const getElapsedSeconds = (startedAt: string | null, finishedAt: string | null): number | null => {
+  if (!startedAt) return null
+  const start = new Date(startedAt).getTime()
+  const end = finishedAt ? new Date(finishedAt).getTime() : Date.now()
+  return Math.floor((end - start) / 1000)
+}
+
 interface SpectatorStatsProps {
   useMetric: boolean
 }
@@ -42,6 +50,33 @@ interface SpectatorStatsProps {
 export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
   const { event, stats, connectionStatus } = useSpectatorStore()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [liveElapsed, setLiveElapsed] = useState<number | null>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Tick every second using startedAt as the source of truth
+  useEffect(() => {
+    if (timerRef.current) clearInterval(timerRef.current)
+
+    if (!event?.startedAt) {
+      setLiveElapsed(null)
+      return
+    }
+
+    // Set immediately so there's no 1s delay on mount
+    setLiveElapsed(getElapsedSeconds(event.startedAt, event.finishedAt ?? null))
+
+    // Only tick if the race is still ongoing
+    if (!event.finishedAt) {
+      timerRef.current = setInterval(() => {
+        setLiveElapsed(getElapsedSeconds(event.startedAt!, null))
+      }, 1000)
+    }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [event?.startedAt, event?.finishedAt])
+
   if (!event) return null
 
   const totalDist     = event.route.totalDistance ?? 0
@@ -52,16 +87,16 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
   const distTotal     = fmtDist(totalDist, useMetric)
   const avgPace       = fmtPace(stats.averagePaceSecondsPerMile, useMetric)
   const currPace      = fmtPace(stats.currentPaceSecondsPerMile, useMetric)
-  const elapsed       = fmtElapsed(stats.elapsedSeconds)
+  const elapsed       = fmtElapsed(liveElapsed)
   const estFinish     = fmtElapsed((stats.elapsedSeconds ?? 0) + (stats.estimatedFinishSeconds ?? 0))
   const eta           = fmtETA(stats.estimatedFinishTimestamp)
   const pct           = totalDist > 0 ? Math.min(1, covered / totalDist) : 0
 
   const statCells = [
     { label: 'Average pace', value: avgPace },
-    { label: 'Elapsed',  value: elapsed },
+    { label: 'Elapsed',      value: elapsed },
     { label: 'Current pace', value: currPace },
-    { label: 'Est. finish', value: estFinish, highlight: true },
+    { label: 'Est. finish',  value: estFinish, highlight: true },
   ]
 
   return (
@@ -96,27 +131,27 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
 
           {/* Cancelled notice */}
           {event.status === 'Cancelled' && (
-              <div style={{
-              margin:  `12px ${screenPad}px 0`,
-              padding: '12px 16px',
-              background:    'rgba(255,82,71,.1)',
-              border:        `1px solid rgba(255,82,71,.25)`,
-              borderRadius:  12,
-              }}>
+            <div style={{
+              margin:       `12px ${screenPad}px 0`,
+              padding:      '12px 16px',
+              background:   'rgba(255,82,71,.1)',
+              border:       `1px solid rgba(255,82,71,.25)`,
+              borderRadius: 12,
+            }}>
               <p style={{ fontFamily: F.ui, fontSize: 13, color: C.red, margin: 0 }}>
-                  {event.cancelReason
+                {event.cancelReason
                   ? `Event cancelled — ${CANCEL_REASONS.find(r => r.value === event.cancelReason)?.label ?? event.cancelReason}`
                   : 'Event cancelled'}
               </p>
-              </div>
+            </div>
           )}
 
           {/* Progress card */}
           {totalDist > 0 && (
             <div style={{
-              margin:        '0px 16px 0px 16px',
-              padding:       '0px 16px',
-              zIndex:        10,
+              margin:  '0px 16px 0px 16px',
+              padding: '0px 16px',
+              zIndex:  10,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
                 <span style={{ fontFamily: F.ui, fontSize: 13, color: C.textSecondary }}>
@@ -127,9 +162,9 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
                 </span>
               </div>
               <div style={{ marginBottom: 8 }}>
-                  <span style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.textPrimary }}>
-                      {distRemaining}
-                  </span>
+                <span style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.textPrimary }}>
+                  {distRemaining}
+                </span>
               </div>
               <div style={{ height: 8, borderRadius: 4, background: C.elevated, overflow: 'hidden', marginBottom: 4 }}>
                 <div style={{ height: '100%', width: `${pct * 100}%`, background: C.volt, borderRadius: 4, transition: 'width .5s ease' }} />
@@ -151,16 +186,16 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
             overflow:   'hidden',
             transition: 'max-height 0.35s cubic-bezier(.4,0,.2,1)',
           }}>
-           <div style={{
-             display: 'grid',
-             gridTemplateColumns: '1fr 1fr',
-             gap:     10,
-             padding: `16px ${screenPad}px`,
-           }}>
-             {statCells.map(({ label, value, highlight }) => (
-               <StatCard key={label} label={label} value={value} highlight={!!highlight} />
-             ))}
-           </div>
+            <div style={{
+              display:             'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap:                 10,
+              padding:             `16px ${screenPad}px`,
+            }}>
+              {statCells.map(({ label, value, highlight }) => (
+                <StatCard key={label} label={label} value={value} highlight={!!highlight} />
+              ))}
+            </div>
           </div>
 
           {/* Footer */}
@@ -190,13 +225,13 @@ const StatCard = ({ label, value, highlight }: { label: string; value: string; h
       {label}
     </p>
     <p style={{
-      fontFamily:          F.display,
-      fontSize:            22,
-      fontWeight:          700,
-      fontVariantNumeric:  'tabular-nums',
-      color:               highlight ? C.volt : (value === '—' ? C.textTertiary : C.textPrimary),
-      margin:              0,
-      letterSpacing:       '-.01em',
+      fontFamily:         F.display,
+      fontSize:           22,
+      fontWeight:         700,
+      fontVariantNumeric: 'tabular-nums',
+      color:              highlight ? C.volt : (value === '—' ? C.textTertiary : C.textPrimary),
+      margin:             0,
+      letterSpacing:      '-.01em',
     }}>
       {value}
     </p>

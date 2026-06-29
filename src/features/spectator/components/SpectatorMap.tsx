@@ -22,8 +22,6 @@ const getRouteBounds = (
   ]
 }
 
-// Finds the index in a flat coordinate array closest to the racer's position,
-// then splits the array into traversed and remaining halves
 const splitRouteAtPosition = (
   coords: [number, number][],
   racerPosition: [number, number]
@@ -36,7 +34,7 @@ const splitRouteAtPosition = (
   coords.forEach(([lng, lat], i) => {
     const dLng = lng - racerPosition[0]
     const dLat = lat - racerPosition[1]
-    const dist = dLng * dLng + dLat * dLat // squared distance, no need for sqrt
+    const dist = dLng * dLng + dLat * dLat
     if (dist < closestDist) {
       closestDist = dist
       closestIndex = i
@@ -51,6 +49,7 @@ const splitRouteAtPosition = (
 
 export const SpectatorMap = () => {
   const mapRef = useRef<MapRef>(null)
+  const hasInitiallyFollowed = useRef(false)
   const {
     event,
     racerPosition,
@@ -79,7 +78,6 @@ export const SpectatorMap = () => {
     properties: {},
   }
 
-  // Fit map to route on load
   const handleMapLoad = useCallback(() => {
     if (!route) return
     const bounds = getRouteBounds(route)
@@ -89,23 +87,37 @@ export const SpectatorMap = () => {
   // Auto-follow racer when in follow mode
   useEffect(() => {
     if (mapMode !== 'follow' || !racerPosition || !mapRef.current) return
-    mapRef.current.easeTo({
-      center: racerPosition,
-      zoom: 15,
-      duration: 800,
-    })
+
+    if (!hasInitiallyFollowed.current) {
+      // First position — fly in at zoom 15
+      mapRef.current.easeTo({
+        center:   racerPosition,
+        zoom:     15,
+        duration: 800,
+      })
+      hasInitiallyFollowed.current = true
+    } else {
+      // Subsequent updates — re-center but respect current zoom
+      mapRef.current.easeTo({
+        center:   racerPosition,
+        zoom:     mapRef.current.getZoom(),
+        duration: 800,
+      })
+    }
   }, [racerPosition, mapMode])
 
   // Fit full route when switching to overview mode
   useEffect(() => {
     if (mapMode !== 'overview' || !route) return
+    // Reset so switching back to follow re-applies zoom 15
+    hasInitiallyFollowed.current = false
     const bounds = getRouteBounds(route)
     if (bounds) mapRef.current?.fitBounds(bounds, { padding: 48, duration: 600 })
   }, [mapMode, route])
 
   if (!route) return null
 
-  const startCoords = route.waypoints[0]?.coordinates
+  const startCoords  = route.waypoints[0]?.coordinates
   const finishCoords = route.waypoints[route.waypoints.length - 1]?.coordinates
 
   return (
@@ -120,7 +132,6 @@ export const SpectatorMap = () => {
         mapStyle="mapbox://styles/mapbox/streets-v12"
         onLoad={handleMapLoad}
       >
-        {/* Traversed portion — grayed out */}
         {traversed.length > 1 && (
           <Source id="route-traversed" type="geojson" data={traversedGeoJson}>
             <Layer
@@ -138,7 +149,6 @@ export const SpectatorMap = () => {
           </Source>
         )}
 
-        {/* Remaining portion — full blue */}
         {remaining.length > 1 && (
           <Source id="route-remaining" type="geojson" data={remainingGeoJson}>
             <Layer
@@ -156,21 +166,13 @@ export const SpectatorMap = () => {
           </Source>
         )}
 
-        {/* Start marker */}
         {startCoords && (
           <Marker longitude={startCoords[0]} latitude={startCoords[1]}>
             <div style={{
-              width: 28,
-              height: 28,
-              borderRadius: '50%',
-              backgroundColor: '#22c55e',
-              border: '2px solid white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 800,
-              fontSize: 11,
+              width: 28, height: 28, borderRadius: '50%',
+              backgroundColor: '#22c55e', border: '2px solid white',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'white', fontWeight: 800, fontSize: 11,
               boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
             }}>
               S
@@ -178,21 +180,13 @@ export const SpectatorMap = () => {
           </Marker>
         )}
 
-        {/* Finish marker */}
         {finishCoords && (
           <Marker longitude={finishCoords[0]} latitude={finishCoords[1]}>
             <div style={{
-              width: 28,
-              height: 28,
-              borderRadius: '50%',
-              backgroundColor: '#ef4444',
-              border: '2px solid white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 800,
-              fontSize: 11,
+              width: 28, height: 28, borderRadius: '50%',
+              backgroundColor: '#ef4444', border: '2px solid white',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'white', fontWeight: 800, fontSize: 11,
               boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
             }}>
               F
@@ -200,7 +194,6 @@ export const SpectatorMap = () => {
           </Marker>
         )}
 
-        {/* Racer marker */}
         {racerPosition && <RacerMarker coordinates={racerPosition} />}
       </Map>
 
@@ -208,22 +201,28 @@ export const SpectatorMap = () => {
       <button
         onClick={() => setMapMode(mapMode === 'follow' ? 'overview' : 'follow')}
         style={{
-          position: 'absolute',
-          bottom: 12,
-          right: 12,
-          zIndex: 10,
-          padding: '8px 12px',
-          borderRadius: 8,
-          border: 'none',
-          backgroundColor: '#1e1e2e',
-          color: '#e2e8f0',
-          fontWeight: 600,
-          fontSize: 12,
-          cursor: 'pointer',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+          position:       'absolute',
+          top:            64,
+          left:           16,
+          zIndex:         10,
+          display:        'flex',
+          alignItems:     'center',
+          gap:            6,
+          padding:        '7px 12px',
+          borderRadius:   100,
+          border:         '1px solid rgba(255,255,255,0.1)',
+          background:     'rgba(10,11,13,0.75)',
+          backdropFilter: 'blur(10px)',
+          color:          '#e2e8f0',
+          fontFamily:     'system-ui, sans-serif',
+          fontWeight:     600,
+          fontSize:       12,
+          cursor:         'pointer',
+          boxShadow:      '0 2px 8px rgba(0,0,0,0.3)',
+          whiteSpace:     'nowrap',
         }}
       >
-        {mapMode === 'follow' ? '🗺 View Full Route' : '📍 Follow Racer'}
+        {mapMode === 'follow' ? 'View Full Route' : 'Follow Racer'}
       </button>
     </div>
   )
