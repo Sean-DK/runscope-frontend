@@ -12,10 +12,17 @@ export const AppLayout = ({ children, hideTabBar = false }: AppLayoutProps) => (
     <div style={{
       display:         'flex',
       flexDirection:   'column',
-      minHeight:       '100dvh',
+      height:          '100dvh',  // fixed height — never grows beyond viewport
       backgroundColor: C.base,
+      overflow:        'hidden',  // prevent outer scroll
     }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{
+        flex:      1,
+        display:   'flex',
+        flexDirection: 'column',
+        overflowY: 'auto',  // content scrolls here, tab bar stays put
+        minHeight: 0,       // required for flex children to scroll correctly
+      }}>
         {children}
       </div>
       {!hideTabBar && <TabBar />}

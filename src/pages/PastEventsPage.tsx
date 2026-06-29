@@ -23,23 +23,39 @@ export const PastEventsPage = () => {
   const { useMetric } = useUnits()
   const [events, setEvents] = useState<RaceEvent[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  
+
   useEffect(() => {
     eventsApi.getPast()
       .then(setEvents)
       .finally(() => setIsLoading(false))
   }, [])
-      
+
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: C.base, overflow: 'auto' }}>
-      {/* Page header */}
+    <div style={{
+      flex:            1,
+      display:         'flex',
+      flexDirection:   'column',
+      backgroundColor: C.base,
+      overflow:        'hidden', // outer container never scrolls
+      minHeight:       0,        // required for nested flex scroll to work
+    }}>
+
+      {/* Page header — fixed */}
       <div style={{ padding: `20px ${screenPad}px 16px`, flexShrink: 0 }}>
-        <h1 style={{ fontFamily: F.display, fontSize: 28, fontWeight: 700, letterSpacing: '-.02em', color: C.textPrimary, margin: 0 }}>
+        <h1 style={{
+          fontFamily:    F.display,
+          fontSize:      28,
+          fontWeight:    700,
+          letterSpacing: '-.02em',
+          color:         C.textPrimary,
+          margin:        0,
+        }}>
           Events
         </h1>
       </div>
-      {/* Stat cards grid */}
-      <div style={{ padding: `20px ${screenPad}px`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+      {/* Stat cards — fixed */}
+      <div style={{ padding: `0 ${screenPad}px 20px`, flexShrink: 0 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <StatCard
             label="Races"
@@ -55,8 +71,10 @@ export const PastEventsPage = () => {
           />
         </div>
       </div>
-      <div style={{ flex: 1 }}>
-        <PastEventList 
+
+      {/* List — scrollable, takes remaining space */}
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+        <PastEventList
           events={events}
           isLoading={isLoading}
         />
@@ -66,7 +84,7 @@ export const PastEventsPage = () => {
 }
 
 const ShoeIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="m15 10.42 4.8-5.07"/>
     <path d="M19 18h3"/>
     <path d="M9.5 22 21.414 9.415A2 2 0 0 0 21.2 6.4l-5.61-4.208A1 1 0 0 0 14 3v2a2 2 0 0 1-1.394 1.906L8.677 8.053A1 1 0 0 0 8 9c-.155 6.393-2.082 9-4 9a2 2 0 0 0 0 4h14"/>
@@ -74,7 +92,7 @@ const ShoeIcon = () => (
 )
 
 const MeasureIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M10 15v-3"/>
     <path d="M14 15v-3"/>
     <path d="M18 15v-3"/>
