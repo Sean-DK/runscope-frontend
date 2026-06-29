@@ -80,9 +80,23 @@ export const SpectatorMap = () => {
 
   const handleMapLoad = useCallback(() => {
     if (!route) return
+  
+    // If we already have a racer position (from lastLocation seed),
+    // fly to it immediately instead of showing the full route
+    if (mapMode === 'follow' && racerPosition && !hasInitiallyFollowed.current) {
+      mapRef.current?.easeTo({
+        center:   racerPosition,
+        zoom:     15,
+        duration: 800,
+      })
+      hasInitiallyFollowed.current = true
+      return
+    }
+  
+    // No racer position yet — fit to full route while waiting
     const bounds = getRouteBounds(route)
     if (bounds) mapRef.current?.fitBounds(bounds, { padding: 48, duration: 0 })
-  }, [route])
+  }, [route, racerPosition, mapMode])
 
   // Auto-follow racer when in follow mode
   useEffect(() => {

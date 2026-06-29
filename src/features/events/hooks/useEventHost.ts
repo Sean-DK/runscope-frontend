@@ -201,7 +201,7 @@ export const useEventHost = () => {
     if (!activeEvent) return
     store.setEnding(true)
     try {
-      await eventsApi.updateStatus(activeEvent.id, 'Cancelled', {})
+      await eventsApi.updateStatus(activeEvent.id, 'Cancelled', { cancelReason: reason })
       store.setCancelReason(reason)
       locationService.stop()
       store.clearActiveEvent()

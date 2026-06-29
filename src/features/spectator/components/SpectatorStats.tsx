@@ -87,7 +87,7 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
   const avgPace       = fmtPace(stats.averagePaceSecondsPerMile, useMetric)
   const currPace      = fmtPace(stats.currentPaceSecondsPerMile, useMetric)
   const elapsed       = fmtElapsed(liveElapsed)
-  const estFinish     = fmtElapsed((liveElapsed ?? 0) + (stats.estimatedFinishSeconds ?? 0))
+  const estFinish     = fmtElapsed((stats.elapsedSeconds ?? 0) + (stats.estimatedFinishSeconds ?? 0))
   const eta           = fmtETA(stats.estimatedFinishTimestamp)
 
   const cancelReasonLabel = event.cancelReason
@@ -176,7 +176,7 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
                     Time elapsed
                   </p>
                   <p style={{ fontFamily: F.display, fontSize: 20, fontWeight: 700, color: C.textPrimary, margin: 0, fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}>
-                    {elapsed}
+                    {fmtElapsed(stats.elapsedSeconds)}
                   </p>
                 </div>
               </div>
