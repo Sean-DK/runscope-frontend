@@ -181,14 +181,16 @@ export const EventHostScreen = () => {
           </button>
         )}
 
-        {isActive && (
+        {canCancel && (
           <button
+            onClick={() => setShowCancelModal(true)}
+            disabled={isEnding}
             style={{
               padding:      '14px',
               borderRadius: 16,
-              border:       `1.5px solid ${C.amber}`,
-              background:   'rgba(255,182,39,.08)',
-              color:        C.amber,
+              border:       `1.5px solid ${C.red}`,
+              background:   'rgba(255,82,71,.1)',
+              color:        C.red,
               fontFamily:   F.ui,
               fontSize:     15,
               fontWeight:   700,
@@ -196,27 +198,7 @@ export const EventHostScreen = () => {
               width:        '100%',
             }}
           >
-            Pause
-          </button>
-        )}
-
-        {canCancel && (
-          <button
-            onClick={() => setShowCancelModal(true)}
-            disabled={isEnding}
-            style={{
-              background:     'none',
-              border:         'none',
-              color:          C.textTertiary,
-              fontFamily:     F.ui,
-              fontSize:       13,
-              fontWeight:     600,
-              cursor:         isEnding ? 'not-allowed' : 'pointer',
-              padding:        '8px',
-              textDecoration: 'underline',
-            }}
-          >
-            Cancel event
+            Cancel
           </button>
         )}
       </div>
