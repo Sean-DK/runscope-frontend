@@ -1,4 +1,4 @@
-import { fetchClient } from '../../shared/utils/fetchClient'
+import { ApiError, fetchClient } from '../../shared/utils/fetchClient'
 import { RaceEvent, CancelReason, EventLocation } from './types'
 
 export const eventsApi = {
@@ -7,6 +7,16 @@ export const eventsApi = {
       method: 'POST',
       body: { routeId },
     })
+  },
+
+  getActive: async (): Promise<RaceEvent | null> => {
+    try {
+      const res = await fetchClient<RaceEvent>('/api/events/active')
+      return res
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 204) return null
+      throw err
+    }
   },
 
   getById: async (id: string): Promise<RaceEvent> => {

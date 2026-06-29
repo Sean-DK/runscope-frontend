@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { EventCodeDisplay } from './EventCodeDisplay'
 import { CancelEventModal } from './CancelEventModal'
 import { useEventHost } from '../hooks/useEventHost'
@@ -14,6 +15,7 @@ const formatElapsed = (seconds: number): string => {
 }
 
 export const EventHostScreen = () => {
+  const navigate = useNavigate()
   const {
     activeEvent,
     isEnding,
@@ -44,6 +46,12 @@ export const EventHostScreen = () => {
   const handleCancel = async (reason: CancelReason) => {
     await cancelEvent(reason)
     setShowCancelModal(false)
+    navigate('/')
+  }
+
+  const handleEnd = async () => {
+    await endEvent()
+    navigate('/')
   }
 
   if (!activeEvent) return null
@@ -55,7 +63,7 @@ export const EventHostScreen = () => {
 
   return (
     <div style={{
-      minHeight:      '100dvh',
+      minHeight:       '100dvh',
       backgroundColor: C.base,
       color:           C.textPrimary,
       display:         'flex',
@@ -92,13 +100,13 @@ export const EventHostScreen = () => {
       {(isActive || isFinished) && (
         <div style={{ textAlign: 'center' }}>
           <div style={{
-            fontFamily:           F.display,
-            fontSize:             68,
-            fontWeight:           700,
-            fontVariantNumeric:   'tabular-nums',
-            letterSpacing:        '-.01em',
-            color:                isFinished ? C.volt : C.textPrimary,
-            lineHeight:           1,
+            fontFamily:         F.display,
+            fontSize:           68,
+            fontWeight:         700,
+            fontVariantNumeric: 'tabular-nums',
+            letterSpacing:      '-.01em',
+            color:              isFinished ? C.volt : C.textPrimary,
+            lineHeight:         1,
           }}>
             {formatElapsed(displaySeconds)}
           </div>
@@ -111,12 +119,12 @@ export const EventHostScreen = () => {
       {/* Pending hint */}
       {isPending && (
         <div style={{
-          background:    C.surface,
-          border:        `1px solid ${C.hairline}`,
-          borderRadius:  16,
-          padding:       '18px 20px',
-          textAlign:     'center',
-          width:         '100%',
+          background:   C.surface,
+          border:       `1px solid ${C.hairline}`,
+          borderRadius: 16,
+          padding:      '18px 20px',
+          textAlign:    'center',
+          width:        '100%',
         }}>
           <p style={{ fontFamily: F.ui, fontSize: 14, color: C.textSecondary, lineHeight: 1.55, margin: 0 }}>
             Head to the start line. Your timer starts automatically when you cross it.
@@ -154,7 +162,7 @@ export const EventHostScreen = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
         {isFinished && (
           <button
-            onClick={endEvent}
+            onClick={handleEnd}
             disabled={isEnding}
             style={{
               padding:      '15px',
@@ -197,14 +205,14 @@ export const EventHostScreen = () => {
             onClick={() => setShowCancelModal(true)}
             disabled={isEnding}
             style={{
-              background:   'none',
-              border:       'none',
-              color:        C.textTertiary,
-              fontFamily:   F.ui,
-              fontSize:     13,
-              fontWeight:   600,
-              cursor:       isEnding ? 'not-allowed' : 'pointer',
-              padding:      '8px',
+              background:     'none',
+              border:         'none',
+              color:          C.textTertiary,
+              fontFamily:     F.ui,
+              fontSize:       13,
+              fontWeight:     600,
+              cursor:         isEnding ? 'not-allowed' : 'pointer',
+              padding:        '8px',
               textDecoration: 'underline',
             }}
           >
@@ -226,10 +234,10 @@ export const EventHostScreen = () => {
 
 const MiniStatCard = ({ label, value }: { label: string; value: string }) => (
   <div style={{
-    background:    C.surface,
-    border:        `1px solid ${C.hairline}`,
-    borderRadius:  14,
-    padding:       '14px 16px',
+    background:   C.surface,
+    border:       `1px solid ${C.hairline}`,
+    borderRadius: 14,
+    padding:      '14px 16px',
   }}>
     <p style={{ fontFamily: F.ui, fontSize: 11, fontWeight: 700, letterSpacing: '.13em', textTransform: 'uppercase', color: C.textTertiary, margin: '0 0 6px' }}>
       {label}

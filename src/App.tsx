@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { useAuth } from './features/auth/hooks/useAuth'
+import { useActiveEventRedirect } from './features/events/hooks/useActiveEventRedirect'
 import { AppLayout } from './shared/components/AppLayout'
 import { HomePage } from './pages/HomePage'
 import { SignInPage } from './pages/SignInPage'
@@ -20,9 +21,13 @@ import { YouPage } from './pages/YouPage'
 
 const AppRoutes = () => {
   const { checkSession } = useAuth()
+  const { check: checkActiveEvent } = useActiveEventRedirect()
 
   useEffect(() => {
-    checkSession()
+    // Check session first, then check for active event once auth is resolved
+    checkSession().then(() => {
+      checkActiveEvent()
+    })
   }, [])
 
   return (

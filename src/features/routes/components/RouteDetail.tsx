@@ -43,11 +43,6 @@ export const RouteDetail = ({ route, onDelete, onShare, isDeleting }: Props) => 
   const mapRef   = useRef<MapRef>(null)
   const { useMetric } = useUnits()
 
-  const coords = getOrderedRouteCoordinates(route)
-    console.log('waypoints:', route.waypoints)
-    console.log('segments:', route.segments)
-    console.log('coords:', coords)
-
   const geoJson: Feature<LineString> = {
     type: 'Feature',
     geometry: { type: 'LineString', coordinates: getOrderedRouteCoordinates(route) },
