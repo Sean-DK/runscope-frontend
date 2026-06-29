@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { useEventStore } from '../store/eventStore'
-import { locationService } from '../services/locationService'
+import { locationService } from '../services/locationService.ts'
 import { useGeofence } from './useGeofence'
 import { useOfflineBuffer } from './useOfflineBuffer'
 import { eventsApi } from '../api'

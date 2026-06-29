@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
 import { EventCodeDisplay } from './EventCodeDisplay'
 import { CancelEventModal } from './CancelEventModal'
 import { useEventHost } from '../hooks/useEventHost'
@@ -28,6 +29,8 @@ export const EventHostScreen = () => {
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [displaySeconds, setDisplaySeconds] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const isNative = Capacitor.isNativePlatform()
 
   useEffect(() => {
     if (activeEvent?.status === 'Active') {
@@ -129,6 +132,46 @@ export const EventHostScreen = () => {
           <p style={{ fontFamily: F.ui, fontSize: 14, color: C.textSecondary, lineHeight: 1.55, margin: 0 }}>
             Head to the start line. Your timer starts automatically when you cross it.
           </p>
+        </div>
+      )}
+
+      {/* PWA warning — only shown when not running as native app */}
+      {!isNative && (
+        <div style={{
+          display:      'flex',
+          gap:          12,
+          alignItems:   'flex-start',
+          width:        '100%',
+          padding:      '14px 16px',
+          borderRadius: 14,
+          background:   'rgba(255,182,39,0.08)',
+          border:       `1px solid rgba(255,182,39,0.25)`,
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.amber} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <div>
+            <p style={{ fontFamily: F.ui, fontSize: 13, fontWeight: 600, color: C.amber, margin: '0 0 4px' }}>
+              Keep your screen on
+            </p>
+            <p style={{ fontFamily: F.ui, fontSize: 12, color: C.textSecondary, margin: '0 0 6px', lineHeight: 1.5 }}>
+              GPS tracking will stop if you lock your phone while using the browser. For uninterrupted tracking, use the RunScope app.
+            </p>
+            <a
+              href="https://play.google.com/store/apps/details?id=net.stablesea.runscope"
+              style={{
+                fontFamily:     F.ui,
+                fontSize:       12,
+                fontWeight:     700,
+                color:          C.volt,
+                textDecoration: 'none',
+              }}
+            >
+              Download the app →
+            </a>
+          </div>
         </div>
       )}
 

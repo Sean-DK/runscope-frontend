@@ -1,24 +1,38 @@
-import { useRegisterSW } from 'virtual:pwa-register/react'
+import { Capacitor } from '@capacitor/core'
+import { useState, useEffect } from 'react'
 import { C, F } from '../ds'
 
 export const UpdatePrompt = () => {
-  const {
-    needRefresh:        [needRefresh, setNeedRefresh],
-    updateServiceWorker,
-  } = useRegisterSW({
-    immediate: true,
-    onRegistered(r) {
-      // Poll every 60 s so a freshly deployed build is detected quickly
-      r && setInterval(() => r.update(), 60_000)
-    },
-  })
+  const [needRefresh, setNeedRefresh] = useState(false)
+  const [updateFn, setUpdateFn] = useState<(() => void) | null>(null)
+
+  useEffect(() => {
+    // Don't register service worker in native app
+    if (Capacitor.isNativePlatform()) return
+
+    // Dynamically import so the build doesn't fail when VitePWA is disabled
+    import('virtual:pwa-register/react').then(({ }) => {
+      // Can't call hooks inside a promise — use the non-hook version instead
+    }).catch(() => {})
+
+    import('virtual:pwa-register').then(({ registerSW }) => {
+      const update = registerSW({
+        immediate: true,
+        onNeedRefresh() {
+          setNeedRefresh(true)
+          setUpdateFn(() => update)
+        },
+        onRegistered(r) {
+          r && setInterval(() => r.update(), 60_000)
+        },
+      })
+    }).catch(() => {})
+  }, [])
 
   if (!needRefresh) return null
 
   const apply = () => {
-    // sendMessage SKIP_WAITING; the workbox 'controlling' listener reloads automatically.
-    // The setTimeout is a belt-and-suspenders fallback for hosts that skip the SW message.
-    updateServiceWorker(false)
+    updateFn?.()
     setTimeout(() => window.location.reload(), 400)
   }
 

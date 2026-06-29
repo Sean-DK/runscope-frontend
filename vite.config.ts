@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import fs from 'fs'
 
+const isCapacitor = process.env.BUILD_TARGET === 'capacitor'
+
 export default defineConfig({
   server: {
     https: {
@@ -13,8 +15,27 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    VitePWA({
-      registerType: 'prompt',  // changed from autoUpdate — lets UpdatePrompt control when to reload
+    // When building for Capacitor, stub out the PWA virtual modules
+    isCapacitor && {
+      name: 'pwa-stub',
+      resolveId(id: string) {
+        if (id.startsWith('virtual:pwa-register')) return id
+      },
+      load(id: string) {
+        if (id.startsWith('virtual:pwa-register')) {
+          return `
+            export const useRegisterSW = () => ({
+              needRefresh: [false, () => {}],
+              offlineReady: [false, () => {}],
+              updateServiceWorker: async () => {},
+            })
+            export const registerSW = () => () => {}
+          `
+        }
+      },
+    },
+    !isCapacitor && VitePWA({
+      registerType: 'prompt',
       devOptions: { enabled: true },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
@@ -40,5 +61,5 @@ export default defineConfig({
         ],
       },
     }),
-  ],
+  ].filter(Boolean),
 })

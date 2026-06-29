@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom'
+import { App as CapApp } from '@capacitor/app'
+import { Capacitor } from '@capacitor/core'
 import { useAuth } from './features/auth/hooks/useAuth'
 import { useActiveEventRedirect } from './features/events/hooks/useActiveEventRedirect'
 import { AppLayout } from './shared/components/AppLayout'
@@ -18,17 +20,41 @@ import { SpectatorPage } from './pages/SpectatorPage'
 import { PastEventsPage } from './pages/PastEventsPage'
 import { PastEventDetailPage } from './pages/PastEventDetailPage'
 import { YouPage } from './pages/YouPage'
+import { Browser } from '@capacitor/browser'
 
 const AppRoutes = () => {
+  const navigate = useNavigate()
   const { checkSession } = useAuth()
   const { check: checkActiveEvent } = useActiveEventRedirect()
 
   useEffect(() => {
-    // Check session first, then check for active event once auth is resolved
     checkSession().then(() => {
       checkActiveEvent()
     })
   }, [])
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+  
+    CapApp.addListener('appUrlOpen', async (event) => {
+      const url = new URL(event.url)
+      const path = url.pathname + url.search
+      console.log('Deep link received:', path)
+  
+      // Close the in-app browser if it's open
+      try {
+        await Browser.close()
+      } catch {
+        // Browser may already be closed
+      }
+  
+      navigate(path)
+    })
+  
+    return () => {
+      CapApp.removeAllListeners()
+    }
+  }, [navigate])
 
   return (
     <Routes>
