@@ -166,11 +166,11 @@ export const useEventHost = () => {
     }
   }, [store, handlePosition])
   
-  const startEvent = useCallback(async (routeId: string) => {
+  const startEvent = useCallback(async (routeId: string, targetTimeSeconds?: number, prTimeSeconds?: number) => {
     store.setStarting(true)
     store.setError(null)
     try {
-      const event = await eventsApi.create(routeId)
+      const event = await eventsApi.create(routeId, targetTimeSeconds, prTimeSeconds)
       store.setActiveEvent(event)
       locationService.start(handlePosition)
     } catch {

@@ -58,6 +58,8 @@ export const SpectatorPage = () => {
             finishedAt: null,
             endedAt: null,
             lastLocation: null,
+            targetTimeSeconds: null,
+            prTimeSeconds: null,
           })
           applyLocationUpdate({
             coordinates: [-0.1180, 51.5160],

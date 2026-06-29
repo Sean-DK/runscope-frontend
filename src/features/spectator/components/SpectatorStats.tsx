@@ -81,24 +81,28 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
   const covered     = Math.max(0, totalDist - remaining)
   const pct         = totalDist > 0 ? Math.min(1, covered / totalDist) : 0
 
-  const distCovered   = fmtDist(covered, useMetric)
-  const distRemaining = fmtDist(remaining, useMetric)
-  const distTotal     = fmtDist(totalDist, useMetric)
-  const avgPace       = fmtPace(stats.averagePaceSecondsPerMile, useMetric)
-  const currPace      = fmtPace(stats.currentPaceSecondsPerMile, useMetric)
-  const elapsed       = fmtElapsed(liveElapsed)
-  const estFinish     = fmtElapsed((stats.elapsedSeconds ?? 0) + (stats.estimatedFinishSeconds ?? 0))
-  const eta           = fmtETA(stats.estimatedFinishTimestamp)
+  const distCovered    = fmtDist(covered, useMetric)
+  const distRemaining  = fmtDist(remaining, useMetric)
+  const distTotal      = fmtDist(totalDist, useMetric)
+  const avgPace        = fmtPace(stats.averagePaceSecondsPerMile, useMetric)
+  const currPace       = fmtPace(stats.currentPaceSecondsPerMile, useMetric)
+  const elapsed        = fmtElapsed(liveElapsed)
+  const estFinish      = fmtElapsed((stats.elapsedSeconds ?? 0) + (stats.estimatedFinishSeconds ?? 0))
+  const targetFinish   = fmtElapsed(event.targetTimeSeconds)
+  const prFinish       = fmtElapsed(event.prTimeSeconds)
+  const eta            = fmtETA(stats.estimatedFinishTimestamp)
 
   const cancelReasonLabel = event.cancelReason
     ? CANCEL_REASONS.find(r => r.value === event.cancelReason)?.label ?? event.cancelReason
     : 'Unknown reason'
 
   const statCells = [
-    { label: 'Average pace', value: avgPace },
-    { label: 'Elapsed',      value: elapsed },
-    { label: 'Current pace', value: currPace },
-    { label: 'Est. finish',  value: estFinish, highlight: true },
+    { label: 'Average pace',    value: avgPace },
+    { label: 'Elapsed',         value: elapsed },
+    { label: 'Current pace',    value: currPace },
+    { label: 'Target finish',   value: targetFinish },
+    { label: 'PR',              value: prFinish },
+    { label: 'Est. finish',     value: estFinish, highlight: true },
   ]
 
   return (

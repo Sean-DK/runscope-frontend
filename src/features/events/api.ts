@@ -2,12 +2,16 @@ import { ApiError, fetchClient } from '../../shared/utils/fetchClient'
 import { RaceEvent, CancelReason, EventLocation } from './types'
 
 export const eventsApi = {
-  create: async (routeId: string): Promise<RaceEvent> => {
-    return fetchClient<RaceEvent>('/api/events', {
+  create: (routeId: string, targetTimeSeconds?: number, prTimeSeconds?: number) =>
+    fetchClient<RaceEvent>('/api/events', {
       method: 'POST',
-      body: { routeId },
-    })
-  },
+      body:   {
+        routeId,
+        targetTimeSeconds: targetTimeSeconds ?? null, 
+        prTimeSeconds: prTimeSeconds ?? null,
+      },
+    }
+  ),
 
   getActive: async (): Promise<RaceEvent | null> => {
     try {

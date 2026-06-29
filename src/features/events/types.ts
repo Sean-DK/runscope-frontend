@@ -41,6 +41,8 @@ export interface RaceEvent {
   finishedAt: string | null // when finish line geofence was crossed
   endedAt: string | null    // when racer pressed End Event
   lastLocation: EventLocation | null
+  targetTimeSeconds: number | null
+  prTimeSeconds: number | null
 }
 
 // Buffered location point stored in IndexedDB when offline
