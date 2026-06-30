@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useSpectatorStore } from '../features/spectator/store/spectatorStore'
 import { useSpectatorSignalR } from '../features/spectator/hooks/useSpectatorSignalR'
@@ -8,12 +8,22 @@ import { C, F } from '../shared/ds'
 import { SpectatorStats } from '../features/spectator/components/SpectatorStats'
 import { useUnits } from '../shared/hooks/useUnits'
 
+// Flattened path used to simulate the racer moving along the dummy route in dev mode
+const DEV_ROUTE_PATH: [number, number][] = [
+  [-0.1276, 51.5074],
+  [-0.1240, 51.5120],
+  [-0.1200, 51.5200],
+  [-0.1130, 51.5230],
+  [-0.1050, 51.5250],
+]
+
 export const SpectatorPage = () => {
   const { id } = useParams<{ id: string }>()
   const [searchParams] = useSearchParams()
   const navigate  = useNavigate()
   const { event, error, setEvent, setError, clearSpectator, connectionStatus, applyLocationUpdate, setConnectionStatus } = useSpectatorStore()
   const { useMetric } = useUnits()
+  const devSimulationRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useSpectatorSignalR(event ? id ?? null : null)
 
@@ -28,7 +38,8 @@ export const SpectatorPage = () => {
           applyLocationUpdate(e.lastLocation)
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.log('getEventById failed, falling back to dummy:', err)
         if (import.meta.env.DEV) {
           setConnectionStatus('Connected')
           setEvent({
@@ -43,7 +54,28 @@ export const SpectatorPage = () => {
                 { id: 'wp2', coordinates: [-0.1200, 51.5200], order: 1 },
                 { id: 'wp3', coordinates: [-0.1050, 51.5250], order: 2 },
               ],
-              segments: [],
+              segments: [
+                {
+                  fromWaypointId: 'wp1',
+                  toWaypointId: 'wp2',
+                  distance: 0,
+                  path: [
+                    [-0.1276, 51.5074],
+                    [-0.1240, 51.5120],
+                    [-0.1200, 51.5200],
+                  ],
+                },
+                {
+                  fromWaypointId: 'wp2',
+                  toWaypointId: 'wp3',
+                  distance: 0,
+                  path: [
+                    [-0.1200, 51.5200],
+                    [-0.1130, 51.5230],
+                    [-0.1050, 51.5250],
+                  ],
+                },
+              ],
               totalDistance: 21100,
               createdAt: new Date(Date.now() - 4200000).toISOString(),
               updatedAt: new Date(Date.now() - 4200000).toISOString(),
@@ -57,18 +89,41 @@ export const SpectatorPage = () => {
             targetTimeSeconds: null,
             prTimeSeconds: null,
           })
+
           applyLocationUpdate({
-            coordinates: [-0.1180, 51.5160],
+            coordinates: DEV_ROUTE_PATH[0],
             timestamp: new Date().toISOString(),
-            distanceFromStart: 7400,
+            distanceFromStart: 0,
             currentPaceSecondsPerMile: 342,
             averagePaceSecondsPerMile: 339,
           })
+
+          // Simulate the racer moving along the dummy route every 2 seconds
+          let pointIndex = 0
+          devSimulationRef.current = setInterval(() => {
+            pointIndex = (pointIndex + 1) % DEV_ROUTE_PATH.length
+            const coords = DEV_ROUTE_PATH[pointIndex]
+
+            applyLocationUpdate({
+              coordinates: coords,
+              timestamp: new Date().toISOString(),
+              distanceFromStart: (pointIndex / (DEV_ROUTE_PATH.length - 1)) * 21100,
+              currentPaceSecondsPerMile: 340 + Math.floor(Math.random() * 20),
+              averagePaceSecondsPerMile: 339,
+            })
+          }, 2000)
         } else {
           setError('Event not found. The code may be invalid or expired.')
         }
       })
-    return () => clearSpectator()
+
+    return () => {
+      clearSpectator()
+      if (devSimulationRef.current) {
+        clearInterval(devSimulationRef.current)
+        devSimulationRef.current = null
+      }
+    }
   }, [id])
 
   if (error) {
