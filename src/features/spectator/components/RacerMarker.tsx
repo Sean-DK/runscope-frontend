@@ -12,7 +12,7 @@ export const RacerMarker = ({ coordinates }: RacerMarkerProps) => (
         position: 'absolute',
         inset: -6,
         borderRadius: '50%',
-        backgroundColor: '#3b82f633',
+        backgroundColor: '#C8F94E33',
         animation: 'racerPulse 2s ease-out infinite',
       }} />
       {/* Solid dot */}
@@ -20,8 +20,8 @@ export const RacerMarker = ({ coordinates }: RacerMarkerProps) => (
         width: 20,
         height: 20,
         borderRadius: '50%',
-        backgroundColor: '#3b82f6',
-        border: '3px solid white',
+        backgroundColor: '#C8F94E',
+        border: '3px solid #0C0E12',
         boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
         position: 'relative',
         zIndex: 1,

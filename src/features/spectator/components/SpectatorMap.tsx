@@ -7,8 +7,10 @@ import { ConnectionStatusBar } from './ConnectionStatusBar'
 import { Route } from '../../routes/types'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { getOrderedRouteCoordinates } from '../../routes/utils/routeGeometry'
+import { C } from '../../../shared/ds'
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string
+const MAP_STYLE = 'mapbox://styles/seansc/cmr0nb8ey000001s48tlcheew'
 
 const getRouteBounds = (
   route: Route
@@ -80,9 +82,7 @@ export const SpectatorMap = () => {
 
   const handleMapLoad = useCallback(() => {
     if (!route) return
-  
-    // If we already have a racer position (from lastLocation seed),
-    // fly to it immediately instead of showing the full route
+
     if (mapMode === 'follow' && racerPosition && !hasInitiallyFollowed.current) {
       mapRef.current?.easeTo({
         center:   racerPosition,
@@ -92,18 +92,15 @@ export const SpectatorMap = () => {
       hasInitiallyFollowed.current = true
       return
     }
-  
-    // No racer position yet — fit to full route while waiting
+
     const bounds = getRouteBounds(route)
     if (bounds) mapRef.current?.fitBounds(bounds, { padding: 48, duration: 0 })
   }, [route, racerPosition, mapMode])
 
-  // Auto-follow racer when in follow mode
   useEffect(() => {
     if (mapMode !== 'follow' || !racerPosition || !mapRef.current) return
 
     if (!hasInitiallyFollowed.current) {
-      // First position — fly in at zoom 15
       mapRef.current.easeTo({
         center:   racerPosition,
         zoom:     15,
@@ -111,7 +108,6 @@ export const SpectatorMap = () => {
       })
       hasInitiallyFollowed.current = true
     } else {
-      // Subsequent updates — re-center but respect current zoom
       mapRef.current.easeTo({
         center:   racerPosition,
         zoom:     mapRef.current.getZoom(),
@@ -120,10 +116,8 @@ export const SpectatorMap = () => {
     }
   }, [racerPosition, mapMode])
 
-  // Fit full route when switching to overview mode
   useEffect(() => {
     if (mapMode !== 'overview' || !route) return
-    // Reset so switching back to follow re-applies zoom 15
     hasInitiallyFollowed.current = false
     const bounds = getRouteBounds(route)
     if (bounds) mapRef.current?.fitBounds(bounds, { padding: 48, duration: 600 })
@@ -143,38 +137,40 @@ export const SpectatorMap = () => {
         mapboxAccessToken={MAPBOX_TOKEN}
         initialViewState={{ longitude: 0, latitude: 0, zoom: 1 }}
         style={{ width: '100%', height: '100%' }}
-        mapStyle="mapbox://styles/mapbox/streets-v12"
+        mapStyle={MAP_STYLE}
         onLoad={handleMapLoad}
       >
+        {/* Traversed portion — muted gray, behind us */}
         {traversed.length > 1 && (
           <Source id="route-traversed" type="geojson" data={traversedGeoJson}>
             <Layer
               id="route-traversed-outline"
               type="line"
-              paint={{ 'line-color': '#334155', 'line-width': 6, 'line-opacity': 0.6 }}
+              paint={{ 'line-color': '#1a1f10', 'line-width': 6, 'line-opacity': 0.6, 'line-emissive-strength': 1 }}
               layout={{ 'line-join': 'round', 'line-cap': 'round' }}
             />
             <Layer
               id="route-traversed-line"
               type="line"
-              paint={{ 'line-color': '#64748b', 'line-width': 4, 'line-opacity': 0.9 }}
+              paint={{ 'line-color': '#5c6e2f', 'line-width': 4, 'line-opacity': 0.9, 'line-emissive-strength': 1 }}
               layout={{ 'line-join': 'round', 'line-cap': 'round' }}
             />
           </Source>
         )}
 
+        {/* Remaining portion — volt, the goal ahead */}
         {remaining.length > 1 && (
           <Source id="route-remaining" type="geojson" data={remainingGeoJson}>
             <Layer
               id="route-remaining-outline"
               type="line"
-              paint={{ 'line-color': '#1d4ed8', 'line-width': 6, 'line-opacity': 0.4 }}
+              paint={{ 'line-color': '#7a9e2e', 'line-width': 6, 'line-opacity': 0.35, 'line-emissive-strength': 1 }}
               layout={{ 'line-join': 'round', 'line-cap': 'round' }}
             />
             <Layer
               id="route-remaining-line"
               type="line"
-              paint={{ 'line-color': '#3b82f6', 'line-width': 4, 'line-opacity': 0.9 }}
+              paint={{ 'line-color': '#C8F94E', 'line-width': 4, 'line-opacity': 0.95, 'line-emissive-strength': 1 }}
               layout={{ 'line-join': 'round', 'line-cap': 'round' }}
             />
           </Source>
@@ -184,9 +180,9 @@ export const SpectatorMap = () => {
           <Marker longitude={startCoords[0]} latitude={startCoords[1]}>
             <div style={{
               width: 28, height: 28, borderRadius: '50%',
-              backgroundColor: '#22c55e', border: '2px solid white',
+              backgroundColor: C.green, border: '2px solid #0C0E12',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontWeight: 800, fontSize: 11,
+              color: 'white', fontWeight: 800, fontSize: 13,
               boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
             }}>
               S
@@ -198,9 +194,9 @@ export const SpectatorMap = () => {
           <Marker longitude={finishCoords[0]} latitude={finishCoords[1]}>
             <div style={{
               width: 28, height: 28, borderRadius: '50%',
-              backgroundColor: '#ef4444', border: '2px solid white',
+              backgroundColor: C.red, border: '2px solid #0C0E12',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontWeight: 800, fontSize: 11,
+              color: 'white', fontWeight: 800, fontSize: 13,
               boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
             }}>
               F
