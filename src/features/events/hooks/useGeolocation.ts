@@ -22,7 +22,7 @@ export const haversineDistance = (
 }
 
 export const useGeolocation = ({
-  minDistanceMeters = 10,
+  minDistanceMeters = 5,
   onPosition,
   onError,
 }: GeolocationOptions) => {

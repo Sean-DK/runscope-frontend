@@ -278,7 +278,7 @@ const TargetTimeStep = ({
         </button>
         {isValid && (
           <button onClick={onSkip} style={{ padding: '12px', borderRadius: 14, border: 'none', background: 'none', color: C.textTertiary, fontFamily: F.ui, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            Skip without a target
+            Continue without a target
           </button>
         )}
       </div>
@@ -337,7 +337,7 @@ const PrStep = ({
         </button>
         {selected !== null && (
           <button onClick={onSkip} style={{ padding: '12px', borderRadius: 14, border: 'none', background: 'none', color: C.textTertiary, fontFamily: F.ui, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            Skip without sharing a PR
+            Continue without sharing a PR
           </button>
         )}
       </div>

@@ -26,6 +26,7 @@ const calculateDistanceAlongRoute = (
 }
 
 const MILE_IN_METERS = 1609.344
+const FINISH_DISTANCE_THRESHOLD = 0.98 // must cover 98% of route distance before finish can trigger
 
 interface PaceTracker {
   timestamp: number
@@ -35,6 +36,8 @@ interface PaceTracker {
 export const useEventHost = () => {
   const store = useEventStore()
   const paceHistoryRef = useRef<PaceTracker[]>([])
+  // Track the furthest distance covered so far — used to gate the finish geofence
+  const maxDistanceRef = useRef<number>(0)
   const offlineBuffer = useOfflineBuffer(store.activeEvent?.id ?? '')
 
   useEffect(() => {
@@ -50,13 +53,14 @@ export const useEventHost = () => {
 
   const startGeofence = useGeofence({
     center: startLineCoords ?? [0, 0],
-    radiusMeters: 40,
+    radiusMeters: 20,
     onEnter: useCallback(() => {
       if (!store.activeEvent || store.hasTriggeredStartLine) return
       const timestamp = new Date().toISOString()
       store.setStartedAt(timestamp)
       store.setHasTriggeredStartLine(true)
       paceHistoryRef.current = []
+      maxDistanceRef.current = 0
       if ('vibrate' in navigator) navigator.vibrate([200, 100, 200])
       eventsApi.updateStatus(store.activeEvent.id, 'Active', { startedAt: timestamp })
     }, [store]),
@@ -64,10 +68,16 @@ export const useEventHost = () => {
 
   const finishGeofence = useGeofence({
     center: finishLineCoords ?? [0, 0],
-    radiusMeters: 40,
+    radiusMeters: 20,
     onEnter: useCallback(() => {
       if (!store.activeEvent || store.hasTriggeredFinishLine) return
       if (store.activeEvent.status !== 'Active') return
+      
+      const totalDistance = store.activeEvent.route.totalDistance
+      if (totalDistance > 0 && maxDistanceRef.current < totalDistance * FINISH_DISTANCE_THRESHOLD) {
+        return
+      }
+
       const timestamp = new Date().toISOString()
       store.setFinishedAt(timestamp)
       store.setHasTriggeredFinishLine(true)
@@ -83,10 +93,16 @@ export const useEventHost = () => {
     const position: [number, number] = [coords.longitude, coords.latitude]
 
     startGeofence.check(position)
-    if (store.hasTriggeredStartLine) finishGeofence.check(position)
 
     const now = Date.now()
     const distanceFromStart = calculateDistanceAlongRoute(position, activeEvent.route)
+
+    // Track the furthest distance reached so far for the finish gate check
+    if (distanceFromStart > maxDistanceRef.current) {
+      maxDistanceRef.current = distanceFromStart
+    }
+
+    if (store.hasTriggeredStartLine) finishGeofence.check(position)
 
     paceHistoryRef.current.push({ timestamp: now, distanceFromStart })
 
@@ -151,27 +167,32 @@ export const useEventHost = () => {
     try {
       const event = await eventsApi.getActive()
       if (!event) return false
-  
+
       store.setActiveEvent(event)
       if (event.startedAt) store.setHasTriggeredStartLine(true)
       if (event.finishedAt) store.setHasTriggeredFinishLine(true)
-  
+
+      // Reset distance tracking on rehydration — the racer's actual
+      // progress will be recalculated from subsequent GPS updates
+      maxDistanceRef.current = 0
+
       if (event.status === 'Pending' || event.status === 'Active') {
         locationService.start(handlePosition)
       }
-  
+
       return true
     } catch {
       return false
     }
   }, [store, handlePosition])
-  
+
   const startEvent = useCallback(async (routeId: string, targetTimeSeconds?: number, prTimeSeconds?: number) => {
     store.setStarting(true)
     store.setError(null)
     try {
       const event = await eventsApi.create(routeId, targetTimeSeconds, prTimeSeconds)
       store.setActiveEvent(event)
+      maxDistanceRef.current = 0
       locationService.start(handlePosition)
     } catch {
       store.setError('Failed to start event. Please try again.')
@@ -179,7 +200,7 @@ export const useEventHost = () => {
       store.setStarting(false)
     }
   }, [store, handlePosition])
-  
+
   const endEvent = useCallback(async () => {
     const { activeEvent } = store
     if (!activeEvent) return
@@ -195,7 +216,7 @@ export const useEventHost = () => {
       store.setEnding(false)
     }
   }, [store])
-  
+
   const cancelEvent = useCallback(async (reason: CancelReason) => {
     const { activeEvent } = store
     if (!activeEvent) return
