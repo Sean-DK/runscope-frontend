@@ -72,7 +72,7 @@ export const useEventHost = () => {
     onEnter: useCallback(() => {
       if (!store.activeEvent || store.hasTriggeredFinishLine) return
       if (store.activeEvent.status !== 'Active') return
-      
+
       const totalDistance = store.activeEvent.route.totalDistance
       if (totalDistance > 0 && maxDistanceRef.current < totalDistance * FINISH_DISTANCE_THRESHOLD) {
         return
@@ -222,7 +222,8 @@ export const useEventHost = () => {
     if (!activeEvent) return
     store.setEnding(true)
     try {
-      await eventsApi.updateStatus(activeEvent.id, 'Cancelled', { cancelReason: reason })
+      const endedAt = new Date().toISOString()
+      await eventsApi.updateStatus(activeEvent.id, 'Cancelled', { cancelReason: reason, endedAt })
       store.setCancelReason(reason)
       locationService.stop()
       store.clearActiveEvent()

@@ -10,6 +10,7 @@ export const C = {
   volt:          '#C8F94E',
   amber:         '#FFB627',
   red:           '#FF5247',
+  green:         '#52FF47',
   textPrimary:   '#F2F4F7',
   textSecondary: '#98A0AC',
   textTertiary:  '#5C636E',

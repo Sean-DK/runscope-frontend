@@ -22,10 +22,6 @@ export const SpectatorPage = () => {
     if (!searchParams.get('units')) { navigate(`/events/${id}/units`); return }
     spectatorApi.getEventById(id)
       .then((e) => {
-        if (e.status === 'Ended') {
-          setError('This event has ended.')
-          return
-        }
         setEvent(e)
 
         if (e.lastLocation) {

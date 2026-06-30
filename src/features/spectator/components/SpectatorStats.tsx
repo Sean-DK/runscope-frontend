@@ -54,28 +54,31 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
 
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current)
-
+  
     if (!event?.startedAt) {
       setLiveElapsed(null)
       return
     }
-
-    setLiveElapsed(getElapsedSeconds(event.startedAt, event.finishedAt ?? null))
-
-    if (!event.finishedAt) {
+  
+    const stopAt = event.finishedAt ?? event.endedAt ?? null
+  
+    setLiveElapsed(getElapsedSeconds(event.startedAt, stopAt))
+  
+    if (!stopAt) {
       timerRef.current = setInterval(() => {
         setLiveElapsed(getElapsedSeconds(event.startedAt!, null))
       }, 1000)
     }
-
+  
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [event?.startedAt, event?.finishedAt])
+  }, [event?.startedAt, event?.finishedAt, event?.endedAt])
 
   if (!event) return null
 
   const isCancelled = event.status === 'Cancelled'
+  const isFinished  = event.status === 'Finished' || event.status === 'Ended'
   const totalDist   = event.route.totalDistance ?? 0
   const remaining   = stats.distanceRemainingMeters ?? totalDist
   const covered     = Math.max(0, totalDist - remaining)
@@ -180,7 +183,58 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
                     Time elapsed
                   </p>
                   <p style={{ fontFamily: F.display, fontSize: 20, fontWeight: 700, color: C.textPrimary, margin: 0, fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}>
-                    {fmtElapsed(stats.elapsedSeconds)}
+                    {elapsed}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : isFinished ? (
+            /* Finished summary — replaces progress card */
+            <div style={{ margin: '0 16px 12px', padding: '18px 20px', background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: 16 }}>
+              {/* Header row */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <div style={{
+                  width:          36,
+                  height:         36,
+                  borderRadius:   10,
+                  background:     'rgba(82,255,71,.12)',
+                  border:         '1px solid rgba(82,255,71,.2)',
+                  display:        'flex',
+                  alignItems:     'center',
+                  justifyContent: 'center',
+                  flexShrink:     0,
+                }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52ff47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="m9 12 2 2 4-4"/>
+                  </svg>
+                </div>
+                <div>
+                  <p style={{ fontFamily: F.ui, fontSize: 12, fontWeight: 700, color: C.green, margin: '0 0 2px', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                    Race finished
+                  </p>
+                  <p style={{ fontFamily: F.ui, fontSize: 13, color: C.textSecondary, margin: 0 }}>
+                    {distTotal}
+                  </p>
+                </div>
+              </div>
+
+              {/* Stats row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div style={{ background: C.elevated, borderRadius: 12, padding: '12px 14px' }}>
+                  <p style={{ fontFamily: F.ui, fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: C.textTertiary, margin: '0 0 4px' }}>
+                    Average pace
+                  </p>
+                  <p style={{ fontFamily: F.display, fontSize: 20, fontWeight: 700, color: C.textPrimary, margin: 0, letterSpacing: '-.01em' }}>
+                    {avgPace}
+                  </p>
+                </div>
+                <div style={{ background: C.elevated, borderRadius: 12, padding: '12px 14px' }}>
+                  <p style={{ fontFamily: F.ui, fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: C.textTertiary, margin: '0 0 4px' }}>
+                    Time elapsed
+                  </p>
+                  <p style={{ fontFamily: F.display, fontSize: 20, fontWeight: 700, color: C.textPrimary, margin: 0, fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}>
+                    {elapsed}
                   </p>
                 </div>
               </div>
