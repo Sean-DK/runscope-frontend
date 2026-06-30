@@ -133,7 +133,7 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
         >
           {/* Handle pill */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-            <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)' }} />
+            {(!isCancelled  && !isFinished) && (<div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)' }} />)}
           </div>
 
           {/* Cancellation summary — replaces progress card */}
@@ -172,7 +172,7 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div style={{ background: C.elevated, borderRadius: 12, padding: '12px 14px' }}>
                   <p style={{ fontFamily: F.ui, fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: C.textTertiary, margin: '0 0 4px' }}>
-                    Distance covered
+                    Dist. covered
                   </p>
                   <p style={{ fontFamily: F.display, fontSize: 20, fontWeight: 700, color: C.textPrimary, margin: 0, letterSpacing: '-.01em' }}>
                     {distCovered}
@@ -267,8 +267,8 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
             )
           )}
 
-          {/* Collapsible stat cards — hidden when cancelled */}
-          {!isCancelled && (
+          {/* Collapsible stat cards — hidden when cancelled or finished */}
+          {(!isCancelled && !isFinished) && (
             <div style={{
               maxHeight:  drawerOpen ? '400px' : '0px',
               overflow:   'hidden',
@@ -290,10 +290,10 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
           {/* Footer */}
           <div style={{ padding: `0 ${screenPad}px 8px`, textAlign: 'center' }}>
             <p style={{ fontFamily: F.ui, fontSize: 11, color: C.textTertiary, margin: 0 }}>
-              {isCancelled
+              {isCancelled || isFinished
                 ? 'This event has ended'
                 : connectionStatus === 'Connected'
-                ? 'Auto-refresh · updates in real time'
+                ? 'Auto-refresh · Updates in real time'
                 : connectionStatus === 'Reconnecting'
                 ? 'Reconnecting...'
                 : 'Connection lost'}

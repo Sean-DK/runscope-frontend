@@ -146,13 +146,13 @@ export const SpectatorMap = () => {
             <Layer
               id="route-traversed-outline"
               type="line"
-              paint={{ 'line-color': '#1a1f10', 'line-width': 6, 'line-opacity': 0.6, 'line-emissive-strength': 1 }}
+              paint={{ 'line-color': '#1a1b1e', 'line-width': 6, 'line-opacity': 0.6, 'line-emissive-strength': 1 }}
               layout={{ 'line-join': 'round', 'line-cap': 'round' }}
             />
             <Layer
               id="route-traversed-line"
               type="line"
-              paint={{ 'line-color': '#5c6e2f', 'line-width': 4, 'line-opacity': 0.9, 'line-emissive-strength': 1 }}
+              paint={{ 'line-color': '#9197a3', 'line-width': 4, 'line-opacity': 0.9, 'line-emissive-strength': 1 }}
               layout={{ 'line-join': 'round', 'line-cap': 'round' }}
             />
           </Source>
