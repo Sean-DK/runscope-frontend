@@ -9,7 +9,7 @@ let watchId: string | null = null
 let positionHandler: PositionHandler | null = null
 let errorHandler: ErrorHandler | null = null
 let lastPosition: [number, number] | null = null
-const MIN_DISTANCE_METERS = 10
+const MIN_DISTANCE_METERS = 5
 
 export const locationService = {
   async start(onPosition: PositionHandler, onError?: ErrorHandler) {
@@ -30,8 +30,9 @@ export const locationService = {
 
       watchId = await Geolocation.watchPosition(
         {
-          enableHighAccuracy: true,
-          timeout:            15000,
+          enableHighAccuracy:    true,
+          timeout:               15000,
+          minimumUpdateInterval: 5000
         },
         (pos, err) => {
           if (err || !pos) {
