@@ -17,6 +17,7 @@ export interface Route {
     waypoints: Waypoint[]
     segments: RouteSegment[]
     totalDistance: number // meters
+    elevationGainMeters: number | null
     createdAt: string
     updatedAt: string
 }

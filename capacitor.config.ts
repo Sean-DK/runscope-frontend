@@ -1,13 +1,27 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-  appId: 'net.stablesea.runscope',
+  appId:   'net.stablesea.runscope',
   appName: 'RunScope',
-  webDir: 'dist',
+  webDir:  'dist',
   server: {
     androidScheme: 'https',
-    hostname: 'runscope.stablesea.net'
+    hostname:      'runscope.stablesea.net',
   },
-};
+  android: {
+    useLegacyBridge: true,
+  },
+  plugins: {
+    Geolocation: {
+      androidForegroundServiceEnabled: true,
+      androidForegroundServiceNotificationTitle: 'RunScope is tracking your run',
+      androidForegroundServiceNotificationBody: 'Your location is being shared with spectators.',
+      androidForegroundServiceNotificationIcon: 'ic_launcher',
+    },
+    CapacitorHttp: {
+        enabled: true,
+    },
+  },
+}
 
-export default config;
+export default config

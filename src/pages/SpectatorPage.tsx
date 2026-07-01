@@ -77,6 +77,7 @@ export const SpectatorPage = () => {
                 },
               ],
               totalDistance: 21100,
+              elevationGainMeters: 37,
               createdAt: new Date(Date.now() - 4200000).toISOString(),
               updatedAt: new Date(Date.now() - 4200000).toISOString(),
             },

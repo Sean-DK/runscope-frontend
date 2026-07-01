@@ -4,6 +4,7 @@ import { RouteBuilderMap } from '../features/routes/components/RouteBuilderMap'
 import { RouteBuilderSidebar } from '../features/routes/components/RouteBuilderSidebar'
 import { useRouteBuilder } from '../features/routes/hooks/useRouteBuilder'
 import { useRouteStore } from '../features/routes/store/routeStore'
+import { ConfirmModal } from '../shared/components/ConfirmModal'
 import { useUnits } from '../shared/hooks/useUnits'
 import { routesApi } from '../features/routes/api'
 import { C, F } from '../shared/ds'
@@ -28,6 +29,7 @@ const fmtDist = (m: number, metric: boolean) =>
 export const RouteBuilderPage = () => {
   const [searchParams] = useSearchParams()
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
   const editId = searchParams.get('edit')
   const { initNew, initEdit, clearDraft } = useRouteBuilder()
   const store   = useRouteStore()
@@ -36,9 +38,14 @@ export const RouteBuilderPage = () => {
 
   const handleCancel = () => {
     if (store.isDirty) {
-      const ok = window.confirm('You have unsaved changes. Discard them and leave?')
-      if (!ok) return
+      setShowDiscardConfirm(true)
+      return
     }
+    navigate('/routes')
+  }
+  
+  const handleDiscardConfirmed = () => {
+    setShowDiscardConfirm(false)
     navigate('/routes')
   }
 
@@ -55,6 +62,18 @@ export const RouteBuilderPage = () => {
     <div style={{ position: 'relative', height: '100dvh', width: '100vw', overflow: 'hidden' }}>
       {/* Map always fills the screen */}
       <RouteBuilderMap />
+
+      {showDiscardConfirm && (
+        <ConfirmModal
+          title="Discard changes?"
+          message="You have unsaved changes. Leaving now will discard them."
+          confirmLabel="Discard changes"
+          cancelLabel="Keep editing"
+          destructive
+          onConfirm={handleDiscardConfirmed}
+          onCancel={() => setShowDiscardConfirm(false)}
+        />
+      )}
 
       {/* Backdrop — blocks map interaction and closes sidebar on tap */}
       {sidebarOpen && (

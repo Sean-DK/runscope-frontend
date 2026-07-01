@@ -80,7 +80,7 @@ export const SpectatorStats = ({ useMetric }: SpectatorStatsProps) => {
   const isCancelled = event.status === 'Cancelled'
   const isFinished  = event.status === 'Finished' || event.status === 'Ended'
   const totalDist   = event.route.totalDistance ?? 0
-  const remaining   = stats.distanceRemainingMeters ?? totalDist
+  const remaining   = event.status === 'Pending' ? totalDist : stats.distanceRemainingMeters ?? totalDist
   const covered     = Math.max(0, totalDist - remaining)
   const pct         = totalDist > 0 ? Math.min(1, covered / totalDist) : 0
 

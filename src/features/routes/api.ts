@@ -60,6 +60,10 @@ export const routesApi = {
     return fetchClient(`/api/routes/${id}`, { method: 'DELETE' })
   },
 
+  deleteWithEvents: (id: string) => {
+    return fetchClient(`/api/routes/${id}?force=true`, { method: 'DELETE' })
+  },
+
   saveShared: async (id: string): Promise<Route> => {
     return fetchClient<Route>(`/api/routes/shared/${id}/save`, { method: 'POST' })
   },

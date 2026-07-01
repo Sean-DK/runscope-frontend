@@ -64,7 +64,7 @@ export const SpectatorMap = () => {
 
   const allCoords = route ? getOrderedRouteCoordinates(route) : []
 
-  const { traversed, remaining } = racerPosition
+  const { traversed, remaining } = racerPosition && event?.status !== 'Pending'
     ? splitRouteAtPosition(allCoords, racerPosition)
     : { traversed: [], remaining: allCoords }
 

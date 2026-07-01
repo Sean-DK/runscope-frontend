@@ -39,6 +39,7 @@ const newDraftRoute = (): Route => ({
     waypoints: [],
     segments: [],
     totalDistance: 0,
+    elevationGainMeters: 0,
     createdAt: '',
     updatedAt: '',
 })

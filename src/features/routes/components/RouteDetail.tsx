@@ -13,6 +13,15 @@ const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string
 const fmtDist = (m: number, metric: boolean) =>
   metric ? `${(m / 1000).toFixed(1)} km` : `${(m / 1609.344).toFixed(1)} mi`
 
+const fmtElev = (meters: number | null, useMetric: boolean): string => {
+  if (meters === null) return '—'
+  if (useMetric) {
+    return `${Math.round(meters)}m`
+  }
+  const feet = meters * 3.28084
+  return `${Math.round(feet)}ft`
+}
+
 const estMin = (m: number) => Math.round(m / 1000 * 6)
 
 const getBounds = (route: Route): [[number, number], [number, number]] | null => {
@@ -131,7 +140,7 @@ export const RouteDetail = ({ route, onDelete, onShare, isDeleting }: Props) => 
       }}>
         <StatCell label="Distance" value={fmtDist(route.totalDistance, useMetric)} />
         <div style={{ width: 1, background: C.hairline, flexShrink: 0 }} />
-        <StatCell label="Gain" value="—" />
+        <StatCell label="Gain" value={fmtElev(route.elevationGainMeters, useMetric)} />
         <div style={{ width: 1, background: C.hairline, flexShrink: 0 }} />
         <StatCell label="Est min" value={`${estMin(route.totalDistance)}`} />
       </div>

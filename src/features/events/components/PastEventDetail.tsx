@@ -24,6 +24,11 @@ const fmtPace = (spm: number): string => {
   return `${m}:${String(s).padStart(2, '0')} /km`
 }
 
+const fmtElev = (meters: number | null): string => {
+  if (meters === null) return '—'
+  return `${Math.round(meters)}m`
+}
+
 interface Props { event: RaceEvent }
 
 export const PastEventDetail = ({ event }: Props) => {
@@ -99,7 +104,7 @@ export const PastEventDetail = ({ event }: Props) => {
         <div style={{ width: 1, background: C.hairline }} />
         <StatCell label="Avg pace" value={avgPace !== null ? fmtPace(avgPace) : '—'} />
         <div style={{ width: 1, background: C.hairline }} />
-        <StatCell label="Gain" value="—" />
+        <StatCell label="Gain" value={fmtElev(event.route.elevationGainMeters)} />
       </div>
 
       {/* Timeline */}

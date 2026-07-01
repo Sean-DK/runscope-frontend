@@ -75,6 +75,7 @@ export const useRouteBuilder = () => {
         waypoints: draftRoute.waypoints,
         segments: draftRoute.segments,
         totalDistance: draftRoute.totalDistance,
+        elevationGainMeters: draftRoute.elevationGainMeters,
       }
 
       if (draftRoute.id) {
